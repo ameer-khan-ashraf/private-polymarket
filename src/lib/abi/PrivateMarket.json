@@ -1,0 +1,501 @@
+[
+  {
+    "inputs": [],
+    "name": "AlreadyClaimed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BettingClosed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidBetAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidResolutionTime",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LoserCannotClaim",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MarketAlreadyResolved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MarketDoesNotExist",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MarketNotResolved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoBetFound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotMarketCreator",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "marketId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "bettor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isYes",
+        "type": "bool"
+      }
+    ],
+    "name": "BetPlaced",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "marketId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "resolutionTime",
+        "type": "uint256"
+      }
+    ],
+    "name": "MarketCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "marketId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "outcome",
+        "type": "bool"
+      }
+    ],
+    "name": "MarketResolved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "marketId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "bettor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RefundClaimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "marketId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "winner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "WinningsClaimed",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "bets",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isYes",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "claimed",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_marketId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_user",
+        "type": "address"
+      }
+    ],
+    "name": "calculatePayout",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_marketId",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimWinnings",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_resolutionTime",
+        "type": "uint256"
+      }
+    ],
+    "name": "createMarket",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_marketId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMarket",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "marketId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalYesBets",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalNoBets",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolutionTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "outcome",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "exists",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct PrivateMarket.Market",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_marketId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTotalValueLocked",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_marketId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserBet",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isYes",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "claimed",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct PrivateMarket.Bet",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "markets",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "marketId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalYesBets",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalNoBets",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "createdAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "resolutionTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "resolved",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "outcome",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "exists",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextMarketId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_marketId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isYes",
+        "type": "bool"
+      }
+    ],
+    "name": "placeBet",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_marketId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_outcome",
+        "type": "bool"
+      }
+    ],
+    "name": "resolveMarket",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
