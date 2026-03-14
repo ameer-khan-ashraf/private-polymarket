@@ -8,5 +8,5 @@ export const config = getDefaultConfig({
   appName: "Private Polymarket",
   projectId: walletConnectProjectId,
   chains: [polygonAmoy],
-  ssr: true,
+  ssr: false,
 });
