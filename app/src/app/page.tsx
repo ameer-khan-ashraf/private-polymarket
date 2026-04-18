@@ -1,15 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Plus, Clock, CheckCircle2, Lock, Trophy, TrendingUp, Wallet, Loader2, AlertTriangle, Wifi, WifiOff } from "lucide-react"
+import { Plus, Clock, CheckCircle2, Lock, Trophy, TrendingUp, Wallet, Loader2, Wifi, WifiOff } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { BetCard } from "@/components/bet-card"
 import { cn } from "@/lib/utils"
 import { useWallet } from "@/lib/wallet-context"
 import { api } from "@/lib/apiClient"
-import { mockBets, mockUserBets } from "@/lib/mock-data"
-import type { Bet, UserBet, Participant } from "@/lib/mock-data"
+import { mockBets } from "@/lib/mock-data"
+import type { Bet, Participant } from "@/lib/mock-data"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { Badge } from "@/components/ui/badge"
 
@@ -19,7 +19,6 @@ export default function HomePage() {
   const [filter, setFilter] = useState<Filter>("all")
   const { isConnected, balance } = useWallet()
   const [bets, setBets] = useState<Bet[]>([])
-  const [userBets, setUserBets] = useState<UserBet[]>([])
   const [loading, setLoading] = useState(true)
   const [dbStatus, setDbStatus] = useState<"online" | "offline">("online")
 
@@ -35,11 +34,6 @@ export default function HomePage() {
         }
 
         setDbStatus("online")
-        if (!markets || markets.length === 0) {
-          setBets(mockBets)
-          setUserBets(mockUserBets)
-          return
-        }
 
         const mappedBets: Bet[] = (markets || []).map((m) => {
           const now = new Date()
@@ -86,12 +80,10 @@ export default function HomePage() {
         })
 
         setBets(mappedBets)
-        setUserBets(mockUserBets)
       } catch (err: any) {
         console.warn("API fetch failed, using mock data fallback.", err?.message || err)
         setDbStatus("offline")
         setBets(mockBets)
-        setUserBets(mockUserBets)
       } finally {
         setLoading(false)
       }
@@ -108,12 +100,7 @@ export default function HomePage() {
     return true
   })
 
-  const userBetsMap = new Map(userBets.map((ub) => [ub.betId, ub]))
-
   const activeBetsCount = bets.filter((b) => b.status === "open" || b.status === "locked").length
-  const totalStaked = userBets.reduce((sum, ub) => sum + ub.stake, 0)
-  const claimable = userBets.filter((ub) => ub.status === "claimable").reduce((sum, ub) => sum + ub.potentialWinnings, 0)
-  const wonBets = userBets.filter((ub) => ub.status === "claimable" || ub.status === "won").length
 
   const filters: { value: Filter; label: string; icon: React.ReactNode; count?: number }[] = [
     { value: "all", label: "All Bets", icon: null, count: bets.length },
@@ -170,33 +157,24 @@ export default function HomePage() {
           </div>
           <div className="rounded-xl bg-card p-3 border border-border/50">
             <div className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-              <Wallet className="h-3 w-3" />
-              Staked
+              <Lock className="h-3 w-3" />
+              Locked
             </div>
-            <div className="text-xl font-bold font-mono">{totalStaked}</div>
+            <div className="text-xl font-bold">{bets.filter(b => b.status === "locked").length}</div>
           </div>
           <div className="rounded-xl bg-card p-3 border border-border/50">
             <div className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
               <Trophy className="h-3 w-3" />
-              Won
+              Settled
             </div>
-            <div className="text-xl font-bold">{wonBets}</div>
+            <div className="text-xl font-bold">{bets.filter(b => b.status === "resolved").length}</div>
           </div>
-          {claimable > 0 ? (
-            <div className="rounded-xl bg-primary/10 p-3 border border-primary/30">
-              <div className="mb-1 text-[10px] uppercase tracking-wider text-primary">
-                Claim
-              </div>
-              <div className="text-xl font-bold text-primary font-mono">{claimable.toFixed(0)}</div>
+          <div className="rounded-xl bg-card p-3 border border-border/50">
+            <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+              Balance
             </div>
-          ) : (
-            <div className="rounded-xl bg-card p-3 border border-border/50">
-              <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                Balance
-              </div>
-              <div className="text-xl font-bold font-mono">{balance.toFixed(1)}</div>
-            </div>
-          )}
+            <div className="text-xl font-bold font-mono">{balance.toFixed(1)}</div>
+          </div>
         </div>
 
         <div className="mb-4 flex items-center justify-between gap-2">
@@ -245,7 +223,6 @@ export default function HomePage() {
               <BetCard 
                 key={bet.id} 
                 bet={bet} 
-                userBet={userBetsMap.get(bet.id)}
               />
             ))}
           </div>
