@@ -149,7 +149,7 @@ export default function BetDetailPage() {
       address: contractAddress,
       abi: PrivateMarketABI,
       functionName: "placeBet",
-      args: [BigInt(chainMarketId), selectedSide === "A"],
+      args: [BigInt(chainMarketId!), selectedSide === "A"],
       value: parseEther(stakeAmount.toString()),
       maxPriorityFeePerGas,
       maxFeePerGas,
@@ -163,7 +163,7 @@ export default function BetDetailPage() {
       address: contractAddress,
       abi: PrivateMarketABI,
       functionName: "claimWinnings",
-      args: [BigInt(chainMarketId)],
+      args: [BigInt(chainMarketId!)],
       maxPriorityFeePerGas,
       maxFeePerGas,
     })
@@ -176,7 +176,7 @@ export default function BetDetailPage() {
       address: contractAddress,
       abi: PrivateMarketABI,
       functionName: "resolveMarket",
-      args: [BigInt(chainMarketId), outcome],
+      args: [BigInt(chainMarketId!), outcome],
       maxPriorityFeePerGas,
       maxFeePerGas,
     }, {
