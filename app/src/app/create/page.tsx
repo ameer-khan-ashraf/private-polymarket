@@ -3,10 +3,13 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Wallet, Sparkles, CheckCircle2, Copy, Check, Calendar, Users, HelpCircle } from "lucide-react"
+import { ArrowLeft, Wallet, Sparkles, CheckCircle2, Copy, Check, CalendarIcon, HelpCircle } from "lucide-react"
+import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -19,7 +22,7 @@ interface FormData {
   description: string
   sideALabel: string
   sideBLabel: string
-  deadline: string
+  deadline: Date | undefined
   deadlineTime: string
   minStake: number
   maxStake: number
@@ -48,7 +51,7 @@ export default function CreateBetPage() {
     description: "",
     sideALabel: "Yes",
     sideBLabel: "No",
-    deadline: "",
+    deadline: undefined,
     deadlineTime: "18:00",
     minStake: 0.1,
     maxStake: 10,
@@ -71,7 +74,9 @@ export default function CreateBetPage() {
     if (!formData.deadline) {
       newErrors.deadline = "Pick a deadline"
     } else {
-      const selectedDate = new Date(`${formData.deadline}T${formData.deadlineTime}`)
+      const [h, m] = formData.deadlineTime.split(":").map(Number)
+      const selectedDate = new Date(formData.deadline)
+      selectedDate.setHours(h, m, 0, 0)
       if (selectedDate <= new Date()) {
         newErrors.deadline = "Deadline must be in the future"
       }
@@ -85,12 +90,16 @@ export default function CreateBetPage() {
       setStep(2)
     } else if (step === 2 && validateStep2()) {
       const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+      const [h, m] = formData.deadlineTime.split(":").map(Number)
+      const resDate = new Date(formData.deadline!)
+      resDate.setHours(h, m, 0, 0)
+
       const result = await createMarket({
         question: formData.question,
         description: formData.description,
         sideALabel: formData.sideALabel,
         sideBLabel: formData.sideBLabel,
-        resolutionDate: `${formData.deadline}T${formData.deadlineTime}`,
+        resolutionDate: resDate.toISOString(),
         minStake: formData.minStake,
         maxStake: formData.maxStake,
         inviteCode
@@ -104,7 +113,7 @@ export default function CreateBetPage() {
     }
   }
 
-  const handleChange = (field: keyof FormData, value: string | number) => {
+  const handleChange = (field: keyof FormData, value: string | number | Date | undefined) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }))
@@ -223,10 +232,40 @@ export default function CreateBetPage() {
           {step === 2 && (
             <div className="space-y-6">
               <div>
-                <label className="mb-2 flex items-center gap-2 text-sm font-medium"><Calendar className="h-4 w-4" />Deadline</label>
+                <label className="mb-2 flex items-center gap-2 text-sm font-medium">
+                  <CalendarIcon className="h-4 w-4" />Deadline
+                </label>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Input type="date" value={formData.deadline} onChange={(e) => handleChange("deadline", e.target.value)} className="rounded-xl bg-input" />
-                  <Input type="time" value={formData.deadlineTime} onChange={(e) => handleChange("deadlineTime", e.target.value)} className="rounded-xl bg-input" />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start rounded-xl bg-input font-normal",
+                          !formData.deadline && "text-muted-foreground",
+                          errors.deadline && "border-destructive"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.deadline ? format(formData.deadline, "dd/MM/yyyy") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.deadline}
+                        onSelect={(date) => handleChange("deadline", date as any)}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Input
+                    type="time"
+                    value={formData.deadlineTime}
+                    onChange={(e) => handleChange("deadlineTime", e.target.value)}
+                    className="rounded-xl bg-input"
+                  />
                 </div>
                 {errors.deadline && <p className="mt-1 text-sm text-destructive">{errors.deadline}</p>}
               </div>
