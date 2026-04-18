@@ -28,6 +28,7 @@ export interface Bet {
   maxStake?: number
   inviteCode: string
   resolvedOutcome?: "A" | "B"
+  chain_market_id?: number
 }
 
 export interface UserBet {
