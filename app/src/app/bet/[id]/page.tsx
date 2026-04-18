@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
 import { useWallet } from "@/lib/wallet-context"
 import { useCountdown } from "@/hooks/use-countdown"
-import { supabase } from "@/lib/supabaseClient"
+import { api } from "@/lib/apiClient"
 import { 
   useReadContract, 
   useWriteContract, 
@@ -65,13 +65,9 @@ export default function BetDetailPage() {
     async function fetchMarket() {
       if (!id) return
       try {
-        const { data, error } = await supabase
-          .from("markets")
-          .select("*")
-          .eq("id", id)
-          .single()
+        const { data, error } = await api.markets.get(id)
 
-        if (error) throw error
+        if (error) throw new Error(error.message)
         
         const creator: Participant = {
           id: data.creator_address || "0x000...",
@@ -185,11 +181,7 @@ export default function BetDetailPage() {
       maxFeePerGas,
     }, {
       onSuccess: async () => {
-        // Update Supabase
-        await supabase
-          .from("markets")
-          .update({ resolved: true, outcome })
-          .eq("id", id)
+        await api.markets.update(id, { resolved: true, outcome })
       }
     })
   }

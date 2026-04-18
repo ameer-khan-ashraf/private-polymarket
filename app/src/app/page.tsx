@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { BetCard } from "@/components/bet-card"
 import { cn } from "@/lib/utils"
 import { useWallet } from "@/lib/wallet-context"
-import { supabase } from "@/lib/supabaseClient"
+import { api } from "@/lib/apiClient"
 import { mockBets, mockUserBets } from "@/lib/mock-data"
 import type { Bet, UserBet, Participant } from "@/lib/mock-data"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
@@ -27,19 +27,11 @@ export default function HomePage() {
     async function fetchData() {
       setLoading(true)
       try {
-        const { data: markets, error: marketsError } = await supabase
-          .from("markets")
-          .select("*")
-          .order("created_at", { ascending: false })
+        const { data: markets, error: marketsError } = await api.markets.list()
 
         if (marketsError) {
-          console.error("Supabase Error Details:", {
-            code: marketsError.code,
-            message: marketsError.message,
-            details: marketsError.details,
-            hint: marketsError.hint
-          })
-          throw marketsError
+          console.error("API Error:", marketsError.message)
+          throw new Error(marketsError.message)
         }
 
         setDbStatus("online")
@@ -96,7 +88,7 @@ export default function HomePage() {
         setBets(mappedBets)
         setUserBets(mockUserBets)
       } catch (err: any) {
-        console.warn("Supabase fetch failed, using mock data fallback.", err?.message || err)
+        console.warn("API fetch failed, using mock data fallback.", err?.message || err)
         setDbStatus("offline")
         setBets(mockBets)
         setUserBets(mockUserBets)

@@ -7,7 +7,7 @@ import { ArrowLeft, Link2, Search, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { supabase } from "@/lib/supabaseClient"
+import { api } from "@/lib/apiClient"
 
 function JoinContent() {
   const router = useRouter()
@@ -32,11 +32,7 @@ function JoinContent() {
     setError("")
 
     try {
-      const { data, error: fetchError } = await supabase
-        .from("markets")
-        .select("id")
-        .eq("invite_code", targetCode.toUpperCase())
-        .single()
+      const { data, error: fetchError } = await api.markets.getByInviteCode(targetCode)
 
       if (fetchError || !data) {
         throw new Error("Invalid invite code. Please check and try again.")

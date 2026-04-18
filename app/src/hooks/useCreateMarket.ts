@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useWriteContract, usePublicClient, useAccount } from "wagmi";
-import { supabase } from "../lib/supabaseClient";
+import { api } from "../lib/apiClient";
 import PrivateMarketABI from "../lib/abi/PrivateMarket.json";
 import { decodeEventLog, parseGwei } from "viem";
 
@@ -44,21 +44,14 @@ export function useCreateMarket() {
     try {
       const tempChainId = Math.floor(Math.random() * 1000000000) * -1;
 
-      // Only insert columns we are sure exist based on common patterns
-      const { data: marketData, error: dbError } = await supabase
-        .from("markets")
-        .insert([
-          {
-            question_text: question,
-            resolution_time: new Date(resolutionDate).toISOString(),
-            creator_address: address || "UNKNOWN",
-            chain_market_id: tempChainId,
-          },
-        ])
-        .select()
-        .single();
+      const { data: marketData, error: dbError } = await api.markets.create({
+        question_text: question,
+        resolution_time: new Date(resolutionDate).toISOString(),
+        creator_address: address || "UNKNOWN",
+        chain_market_id: tempChainId,
+      });
 
-      if (dbError) throw new Error(`Supabase Error: ${dbError.message}`);
+      if (dbError) throw new Error(`API Error: ${dbError.message}`);
       supabaseId = marketData.id;
 
       setStatus("Metadata created. Please confirm transaction in wallet...");
@@ -105,10 +98,9 @@ export function useCreateMarket() {
 
       setStatus(`Market created on-chain. Linking metadata...`);
 
-      const { error: updateError } = await supabase
-        .from("markets")
-        .update({ chain_market_id: Number(marketId) })
-        .eq("id", supabaseId);
+      const { error: updateError } = await api.markets.update(supabaseId!, {
+        chain_market_id: Number(marketId),
+      });
 
       if (updateError) throw new Error(`Failed to link market: ${updateError.message}`);
 
@@ -123,7 +115,7 @@ export function useCreateMarket() {
       setIsLoading(false);
 
       if (supabaseId) {
-        await supabase.from("markets").delete().eq("id", supabaseId);
+        await api.markets.delete(supabaseId);
       }
       return { success: false, error: message };
     }
