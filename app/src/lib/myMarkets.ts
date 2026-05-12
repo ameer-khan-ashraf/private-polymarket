@@ -1,6 +1,7 @@
 const key = (address: string) => `mymarkets_${address.toLowerCase()}`
 
 export function getMyMarketIds(address: string): Set<string> {
+  if (typeof window === "undefined") return new Set()
   try {
     return new Set(JSON.parse(localStorage.getItem(key(address)) || "[]"))
   } catch {
@@ -9,6 +10,7 @@ export function getMyMarketIds(address: string): Set<string> {
 }
 
 export function addMyMarketId(address: string, id: string): void {
+  if (typeof window === "undefined") return
   const ids = getMyMarketIds(address)
   if (ids.has(id)) return
   ids.add(id)

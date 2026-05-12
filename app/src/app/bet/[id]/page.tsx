@@ -58,7 +58,6 @@ export default function BetDetailPage() {
           walletAddress: data.creator_address || "0x000..."
         }
 
-        if (address) addMyMarketId(address, id)
         setBetData({
           id: data.id,
           question: data.question_text || "No question provided",
@@ -76,6 +75,7 @@ export default function BetDetailPage() {
           chain_market_id: data.chain_market_id,
           createdAt: new Date(data.created_at || Date.now())
         } as any)
+        if (address) addMyMarketId(address, id)
       } catch (err) {
         console.error("Error fetching market metadata:", err)
       } finally {

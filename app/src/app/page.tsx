@@ -25,15 +25,18 @@ export default function HomePage() {
   const [dbStatus, setDbStatus] = useState<"online" | "offline">("online")
 
   useEffect(() => {
-    if (!isConnected) {
+    if (!isConnected || !address) {
       setBets([])
       return
     }
+    const currentAddress = address
+    let cancelled = false
     async function fetchData() {
       setLoading(true)
       setBets([])
       try {
         const { data: markets, error: marketsError } = await api.markets.list()
+        if (cancelled) return
 
         if (marketsError) {
           console.error("API Error:", marketsError.message)
@@ -46,7 +49,7 @@ export default function HomePage() {
           const now = new Date()
           const deadline = new Date(m.resolution_time)
           let status: "open" | "locked" | "resolved" = "open"
-          
+
           if (m.resolved) {
             status = "resolved"
           } else if (now >= deadline) {
@@ -86,23 +89,25 @@ export default function HomePage() {
           }
         })
 
-        const myIds = address ? getMyMarketIds(address) : new Set<string>()
+        const myIds = getMyMarketIds(currentAddress)
         const myBets = mappedBets.filter(
           (bet) =>
-            bet.creator.walletAddress?.toLowerCase() === address?.toLowerCase() ||
+            bet.creator.walletAddress?.toLowerCase() === currentAddress.toLowerCase() ||
             myIds.has(bet.id)
         )
         setBets(myBets)
       } catch (err: any) {
+        if (cancelled) return
         console.warn("API fetch failed, using mock data fallback.", err?.message || err)
         setDbStatus("offline")
         setBets(mockBets)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
     fetchData()
+    return () => { cancelled = true }
   }, [address, isConnected])
 
   const filteredBets = bets.filter((bet) => {
