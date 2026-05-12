@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useConnectorClient, usePublicClient, useAccount, useChainId } from "wagmi";
 import { writeContract as viemWriteContract } from "viem/actions";
 import { api } from "../lib/apiClient";
+import { addMyMarketId } from "../lib/myMarkets";
 import PrivateMarketABI from "../lib/abi/PrivateMarket.json";
 import { decodeEventLog, parseGwei } from "viem";
 import { polygonAmoy } from "viem/chains";
@@ -121,6 +122,7 @@ export function useCreateMarket() {
 
       setStatus("Success! Market created and linked.");
       setIsLoading(false);
+      if (address && supabaseId) addMyMarketId(address, supabaseId);
       return { success: true, marketId: Number(marketId), supabaseId };
     } catch (err: unknown) {
       console.error(err);

@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { useWallet } from "@/lib/wallet-context"
 import { api } from "@/lib/apiClient"
 import { mockBets } from "@/lib/mock-data"
+import { getMyMarketIds } from "@/lib/myMarkets"
 import type { Bet, Participant } from "@/lib/mock-data"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { Badge } from "@/components/ui/badge"
@@ -85,7 +86,13 @@ export default function HomePage() {
           }
         })
 
-        setBets(mappedBets)
+        const myIds = address ? getMyMarketIds(address) : new Set<string>()
+        const myBets = mappedBets.filter(
+          (bet) =>
+            bet.creator.walletAddress?.toLowerCase() === address?.toLowerCase() ||
+            myIds.has(bet.id)
+        )
+        setBets(myBets)
       } catch (err: any) {
         console.warn("API fetch failed, using mock data fallback.", err?.message || err)
         setDbStatus("offline")

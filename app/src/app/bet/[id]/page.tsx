@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { useWallet } from "@/lib/wallet-context"
 import { useCountdown } from "@/hooks/use-countdown"
 import { api } from "@/lib/apiClient"
+import { addMyMarketId } from "@/lib/myMarkets"
 import { 
   useReadContract, 
   useWriteContract, 
@@ -57,6 +58,7 @@ export default function BetDetailPage() {
           walletAddress: data.creator_address || "0x000..."
         }
 
+        if (address) addMyMarketId(address, id)
         setBetData({
           id: data.id,
           question: data.question_text || "No question provided",
