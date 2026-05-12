@@ -1,6 +1,9 @@
 import uuid
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
@@ -8,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import Base, engine, get_db
 from models import Market
-from schemas import MarketCreate, MarketResponse, MarketUpdate
+from schemas import GeneratedMarket, MarketCreate, MarketGenerateRequest, MarketResponse, MarketUpdate
+from services.llm import generate_market
 
 
 @asynccontextmanager
@@ -94,6 +98,14 @@ async def update_market(
     await db.commit()
     await db.refresh(market)
     return market
+
+
+@app.post("/generate-market", response_model=GeneratedMarket)
+async def generate_market_endpoint(data: MarketGenerateRequest):
+    try:
+        return await generate_market(data.topic)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"LLM error: {str(e)}")
 
 
 @app.delete("/markets/{id}", status_code=204)

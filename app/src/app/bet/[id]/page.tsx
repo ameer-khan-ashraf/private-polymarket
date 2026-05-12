@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, use, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Clock, Users, Copy, Check, Share2, Lock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
+import { ArrowLeft, Clock, Copy, Check, Share2, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -17,37 +17,19 @@ import {
   useReadContract, 
   useWriteContract, 
   useWaitForTransactionReceipt,
-  useAccount,
-  usePublicClient
+  useChainId
 } from "wagmi"
-import { formatEther, parseEther, parseGwei } from "viem"
+import { formatEther, parseEther } from "viem"
+import { polygonAmoy } from "viem/chains"
 import PrivateMarketABI from "@/lib/abi/PrivateMarket.json"
-import type { Bet, UserBet, Participant } from "@/lib/mock-data"
-
-function ParticipantRow({ participant, stake, isYou }: { participant: { name: string; avatar: string }; stake?: number; isYou?: boolean }) {
-  return (
-    <div className="flex items-center justify-between py-2">
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-sm font-medium">
-          {participant.avatar}
-        </div>
-        <div>
-          <span className="font-medium">{participant.name}</span>
-          {isYou && <Badge variant="outline" className="ml-2 text-xs">You</Badge>}
-        </div>
-      </div>
-      {stake && (
-        <span className="font-mono text-sm text-muted-foreground">{stake} MATIC</span>
-      )}
-    </div>
-  )
-}
+import type { Bet, Participant } from "@/lib/mock-data"
 
 export default function BetDetailPage() {
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
   const { isConnected, balance, address } = useWallet()
+  const chainId = useChainId()
   
   const [betData, setBetData] = useState<Bet | null>(null)
   const [loadingMetadata, setLoadingMetadata] = useState(true)
@@ -55,10 +37,9 @@ export default function BetDetailPage() {
   const [stakeAmount, setStakeAmount] = useState(0.1)
   const [copied, setCopied] = useState(false)
   const [status, setStatus] = useState("")
+  const [pendingResolveOutcome, setPendingResolveOutcome] = useState<boolean | null>(null)
   
   const contractAddress = process.env.NEXT_PUBLIC_MARKET_CONTRACT_ADDRESS as `0x${string}`
-  const maxPriorityFeePerGas = parseGwei("30")
-  const maxFeePerGas = parseGwei("60")
 
   // 1. Fetch Metadata from Supabase
   useEffect(() => {
@@ -139,50 +120,60 @@ export default function BetDetailPage() {
       refetchUserBet()
       refetchPayout()
       setStatus("Success! Action confirmed.")
+      if (pendingResolveOutcome !== null) {
+        api.markets.update(id, { resolved: true, outcome: pendingResolveOutcome })
+        setPendingResolveOutcome(null)
+      }
     }
-  }, [isConfirmed, refetchContractData, refetchUserBet, refetchPayout])
+  }, [isConfirmed, refetchContractData, refetchUserBet, refetchPayout, pendingResolveOutcome, id])
 
   const handlePlaceBet = () => {
     if (!betData || !selectedSide || !isConnected) return
+    if (chainId !== polygonAmoy.id) {
+      setStatus("Switch your wallet to Polygon Amoy before placing a bet.")
+      return
+    }
     setStatus("Confirming transaction...")
     writeContract({
+      chainId: polygonAmoy.id,
       address: contractAddress,
       abi: PrivateMarketABI,
       functionName: "placeBet",
       args: [BigInt(chainMarketId!), selectedSide === "A"],
       value: parseEther(stakeAmount.toString()),
-      maxPriorityFeePerGas,
-      maxFeePerGas,
     })
   }
 
   const handleClaim = () => {
     if (!betData || !isConnected) return
+    if (chainId !== polygonAmoy.id) {
+      setStatus("Switch your wallet to Polygon Amoy before claiming.")
+      return
+    }
     setStatus("Claiming winnings...")
     writeContract({
+      chainId: polygonAmoy.id,
       address: contractAddress,
       abi: PrivateMarketABI,
       functionName: "claimWinnings",
       args: [BigInt(chainMarketId!)],
-      maxPriorityFeePerGas,
-      maxFeePerGas,
     })
   }
 
   const handleResolve = (outcome: boolean) => {
     if (!betData || !isConnected) return
+    if (chainId !== polygonAmoy.id) {
+      setStatus("Switch your wallet to Polygon Amoy before resolving this market.")
+      return
+    }
     setStatus("Resolving market...")
+    setPendingResolveOutcome(outcome)
     writeContract({
+      chainId: polygonAmoy.id,
       address: contractAddress,
       abi: PrivateMarketABI,
       functionName: "resolveMarket",
       args: [BigInt(chainMarketId!), outcome],
-      maxPriorityFeePerGas,
-      maxFeePerGas,
-    }, {
-      onSuccess: async () => {
-        await api.markets.update(id, { resolved: true, outcome })
-      }
     })
   }
 

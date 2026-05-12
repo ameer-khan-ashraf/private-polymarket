@@ -2,7 +2,19 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class MarketGenerateRequest(BaseModel):
+    topic: str = Field(..., min_length=3, max_length=500, strip_whitespace=True)
+
+
+class GeneratedMarket(BaseModel):
+    question_text: str
+    description: str
+    side_a_label: str
+    side_b_label: str
+    suggested_resolution_days: int
 
 
 class MarketCreate(BaseModel):

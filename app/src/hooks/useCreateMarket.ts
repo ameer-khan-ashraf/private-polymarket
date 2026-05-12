@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { useWriteContract, usePublicClient, useAccount } from "wagmi";
+import { useConnectorClient, usePublicClient, useAccount, useChainId } from "wagmi";
+import { writeContract as viemWriteContract } from "viem/actions";
 import { api } from "../lib/apiClient";
 import PrivateMarketABI from "../lib/abi/PrivateMarket.json";
 import { decodeEventLog, parseGwei } from "viem";
+import { polygonAmoy } from "viem/chains";
 
 export type CreateMarketParams = {
   question: string;
@@ -17,22 +19,23 @@ export type CreateMarketParams = {
 
 export function useCreateMarket() {
   const { address } = useAccount();
-  const { writeContractAsync } = useWriteContract();
+  const chainId = useChainId();
+  // Use connector client (MetaMask's provider) directly — avoids routing the write
+  // through the app's FallbackTransport which rate-limits on public Amoy RPCs.
+  const { data: connectorClient } = useConnectorClient();
   const publicClient = usePublicClient();
 
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const maxPriorityFeePerGas = parseGwei("30");
-  const maxFeePerGas = parseGwei("60");
 
   const getErrorMessage = (err: unknown) =>
     err instanceof Error ? err.message : "Unknown error";
 
   const createMarket = async (params: CreateMarketParams) => {
-    const { 
-      question, 
-      resolutionDate, 
+    const {
+      question,
+      resolutionDate,
     } = params;
 
     setIsLoading(true);
@@ -42,6 +45,12 @@ export function useCreateMarket() {
     let supabaseId: string | null = null;
 
     try {
+      if (chainId !== polygonAmoy.id) {
+        throw new Error("Switch your wallet to Polygon Amoy before creating a market.");
+      }
+
+      if (!connectorClient) throw new Error("Wallet not connected.");
+
       const tempChainId = Math.floor(Math.random() * 1000000000) * -1;
 
       const { data: marketData, error: dbError } = await api.markets.create({
@@ -60,13 +69,19 @@ export function useCreateMarket() {
         new Date(resolutionDate).getTime() / 1000,
       );
 
-      const hash = await writeContractAsync({
+      // Call viem's writeContract directly on the connector (MetaMask) client.
+      // This bypasses wagmi's useWriteContract which routes simulation through
+      // the app's public client (FallbackTransport), causing RPC backoff failures
+      // on unreliable public Amoy endpoints.
+      const hash = await viemWriteContract(connectorClient, {
         address: process.env.NEXT_PUBLIC_MARKET_CONTRACT_ADDRESS as `0x${string}`,
         abi: PrivateMarketABI,
         functionName: "createMarket",
         args: [BigInt(resolutionTimestamp)],
-        maxPriorityFeePerGas,
-        maxFeePerGas,
+        gas: 300_000n,
+        maxPriorityFeePerGas: parseGwei("30"),
+        maxFeePerGas: parseGwei("60"),
+        chain: polygonAmoy,
       });
 
       setStatus("Transaction submitted. Waiting for confirmation...");

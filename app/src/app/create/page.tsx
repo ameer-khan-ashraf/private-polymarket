@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Wallet, Sparkles, CheckCircle2, Copy, Check, CalendarIcon, HelpCircle } from "lucide-react"
+import { ArrowLeft, Wallet, Sparkles, CheckCircle2, Copy, Check, CalendarIcon, HelpCircle, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -16,6 +16,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useWallet } from "@/lib/wallet-context"
 import { useCreateMarket } from "@/hooks/useCreateMarket"
 import { cn } from "@/lib/utils"
+import { api } from "@/lib/apiClient"
 
 interface FormData {
   question: string
@@ -59,6 +60,33 @@ export default function CreateBetPage() {
     resolverAddress: "",
   })
   const [errors, setErrors] = useState<FormErrors>({})
+  const [aiTopic, setAiTopic] = useState("")
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generateError, setGenerateError] = useState<string | null>(null)
+
+  const handleGenerate = async () => {
+    if (!aiTopic.trim()) return
+    setIsGenerating(true)
+    setGenerateError(null)
+    const { data, error } = await api.ai.generateMarket(aiTopic.trim())
+    setIsGenerating(false)
+    if (error || !data) {
+      setGenerateError(error?.message ?? "Generation failed")
+      return
+    }
+    const deadline = new Date()
+    deadline.setDate(deadline.getDate() + data.suggested_resolution_days)
+    setFormData((prev) => ({
+      ...prev,
+      question: data.question_text,
+      description: data.description,
+      sideALabel: data.side_a_label,
+      sideBLabel: data.side_b_label,
+      deadline,
+      deadlineTime: "18:00",
+    }))
+    setErrors({})
+  }
 
   const validateStep1 = (): boolean => {
     const newErrors: FormErrors = {}
@@ -193,6 +221,35 @@ export default function CreateBetPage() {
 
           {step === 1 && (
             <div className="space-y-6">
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Generate with AI</span>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="e.g. will ameer finish the hackathon project"
+                    value={aiTopic}
+                    onChange={(e) => setAiTopic(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
+                    className="rounded-xl bg-input"
+                  />
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={isGenerating || !aiTopic.trim()}
+                    variant="outline"
+                    className="shrink-0 rounded-xl"
+                  >
+                    {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Generate"}
+                  </Button>
+                </div>
+                {generateError && <p className="mt-2 text-sm text-destructive">{generateError}</p>}
+              </div>
+              <div className="relative flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs text-muted-foreground">or fill in manually</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
               <div>
                 <label className="mb-2 block text-sm font-medium">What are you betting on?</label>
                 <Textarea

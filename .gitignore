@@ -24,3 +24,5 @@ contracts/artifacts/
 # OS
 .DS_Store
 Thumbs.db
+backend/.venv/
+.zed/

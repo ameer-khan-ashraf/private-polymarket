@@ -1,3 +1,11 @@
+export interface GeneratedMarket {
+  question_text: string
+  description: string
+  side_a_label: string
+  side_b_label: string
+  suggested_resolution_days: number
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 async function request<T>(
@@ -36,5 +44,12 @@ export const api = {
       request<any>(`/markets/${id}`, { method: "PATCH", ...jsonBody(body) }),
     delete: (id: string) =>
       request<null>(`/markets/${id}`, { method: "DELETE" }),
+  },
+  ai: {
+    generateMarket: (topic: string) =>
+      request<GeneratedMarket>("/generate-market", {
+        method: "POST",
+        ...jsonBody({ topic }),
+      }),
   },
 }
