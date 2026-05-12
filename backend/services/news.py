@@ -1,6 +1,7 @@
 import asyncio
 import re
 import time
+from typing import Optional
 
 import feedparser
 import httpx
@@ -14,11 +15,30 @@ FEEDS = [
 ]
 
 _cache: dict = {"articles": [], "expires": 0.0}
+_fetch_lock = asyncio.Lock()
 CACHE_TTL = 300  # 5 minutes
 
 
 def _strip_html(text: str) -> str:
     return re.sub(r"<[^>]+>", "", text).strip()
+
+
+def _safe_int(val) -> int:
+    try:
+        return int(val or 0)
+    except (ValueError, TypeError):
+        return 0
+
+
+def _extract_image(entry: dict) -> Optional[str]:
+    thumbnails = entry.get("media_thumbnail") or []
+    if thumbnails:
+        return thumbnails[0].get("url") or None
+    contents = entry.get("media_content") or []
+    if contents:
+        best = max(contents, key=lambda c: _safe_int(c.get("width")))
+        return best.get("url") or None
+    return None
 
 
 async def _fetch_feed(source: str, url: str) -> list[NewsItem]:
@@ -35,6 +55,7 @@ async def _fetch_feed(source: str, url: str) -> list[NewsItem]:
                 url=entry.get("link", ""),
                 source=source,
                 published_at=entry.get("published", ""),
+                image_url=_extract_image(entry),
             ))
         return items
     except Exception:
@@ -46,9 +67,15 @@ async def get_news() -> list[NewsItem]:
     if _cache["expires"] > now and _cache["articles"]:
         return _cache["articles"]
 
-    results = await asyncio.gather(*[_fetch_feed(src, url) for src, url in FEEDS])
-    articles = [item for feed in results for item in feed]
+    async with _fetch_lock:
+        # Re-check after acquiring lock — another coroutine may have populated cache
+        now = time.time()
+        if _cache["expires"] > now and _cache["articles"]:
+            return _cache["articles"]
 
-    _cache["articles"] = articles
-    _cache["expires"] = now + CACHE_TTL
-    return articles
+        results = await asyncio.gather(*[_fetch_feed(src, url) for src, url in FEEDS])
+        articles = [item for feed in results for item in feed]
+
+        _cache["articles"] = articles
+        _cache["expires"] = now + CACHE_TTL
+        return articles

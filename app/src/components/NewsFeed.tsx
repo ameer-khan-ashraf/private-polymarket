@@ -6,6 +6,7 @@ import { Loader2, Sparkles, ExternalLink, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import { api } from "@/lib/apiClient"
 import type { NewsItem, GeneratedMarket } from "@/lib/apiClient"
 
@@ -21,7 +22,7 @@ function formatRelativeTime(published: string): string {
   }
 }
 
-export function NewsFeed() {
+export function NewsFeed({ compact = false }: { compact?: boolean }) {
   const router = useRouter()
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -99,30 +100,64 @@ export function NewsFeed() {
 
         return (
           <div key={item.id} className="space-y-1">
-            <Card className="p-4">
-              <div className="mb-3">
-                <div className="mb-1.5 flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">{item.source}</Badge>
-                  {item.published_at && (
-                    <span className="text-xs text-muted-foreground">
-                      {formatRelativeTime(item.published_at)}
-                    </span>
-                  )}
-                </div>
-                <p className="font-medium leading-snug">{item.title}</p>
-                {item.description && (
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                    {item.description}
-                  </p>
+            <Card className={cn("overflow-hidden", compact ? "p-0" : "p-4")}>
+              {/* Thumbnail — full-width banner in normal mode, hidden in compact */}
+              {!compact && item.image_url && (
+                <img
+                  src={item.image_url}
+                  alt=""
+                  className="mb-3 h-36 w-full object-cover"
+                />
+              )}
+              <div className={cn(compact ? "p-3 pb-0" : "", compact ? "mb-2" : "mb-3")}>
+                {/* Compact: thumbnail as small inline square next to text */}
+                {compact ? (
+                  <div className="flex gap-2">
+                    {item.image_url && (
+                      <img
+                        src={item.image_url}
+                        alt=""
+                        className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <div className="mb-1 flex items-center gap-1.5">
+                        <Badge variant="secondary" className="text-xs">{item.source}</Badge>
+                        {item.published_at && (
+                          <span className="text-xs text-muted-foreground">
+                            {formatRelativeTime(item.published_at)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium leading-snug line-clamp-2">{item.title}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-1 flex items-center gap-1.5">
+                      <Badge variant="secondary" className="text-xs">{item.source}</Badge>
+                      {item.published_at && (
+                        <span className="text-xs text-muted-foreground">
+                          {formatRelativeTime(item.published_at)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-medium leading-snug">{item.title}</p>
+                    {item.description && (
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                        {item.description}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className={cn("flex items-center gap-2", compact && "px-3 pb-3")}>
                 <Button
                   size="sm"
                   variant="outline"
                   className="gap-1.5 rounded-xl"
                   onClick={() => handleCreateBet(item)}
-                  disabled={isGenerating || !!preview}
+                  disabled={!!generatingFor || !!preview}
                 >
                   {isGenerating ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -131,16 +166,18 @@ export function NewsFeed() {
                   )}
                   {isGenerating ? "Generating..." : "Create Bet"}
                 </Button>
-                <a href={item.url} target="_blank" rel="noopener noreferrer">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="gap-1.5 rounded-xl text-muted-foreground"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Read
-                  </Button>
-                </a>
+                {!compact && (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="gap-1.5 rounded-xl text-muted-foreground"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Read
+                    </Button>
+                  </a>
+                )}
               </div>
               {genError && <p className="mt-2 text-sm text-destructive">{genError}</p>}
             </Card>

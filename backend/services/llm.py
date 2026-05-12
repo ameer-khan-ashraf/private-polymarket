@@ -1,16 +1,24 @@
 import asyncio
 import os
+from typing import Optional
 
 from google import genai
 from google.genai import types
 
 from schemas import GeneratedMarket
 
+_client: Optional[genai.Client] = None
+
+
 def _get_client() -> genai.Client:
-    key = os.getenv("GEMINI_API_KEY")
-    if not key:
-        raise RuntimeError("GEMINI_API_KEY is not configured")
-    return genai.Client(api_key=key)
+    global _client
+    if _client is None:
+        key = os.getenv("GEMINI_API_KEY")
+        if not key:
+            raise RuntimeError("GEMINI_API_KEY is not configured")
+        _client = genai.Client(api_key=key)
+    return _client
+
 
 _PROMPT = """You are helping create a prediction market for a friend group betting app.
 Given a topic, generate a market. Rules:

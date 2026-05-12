@@ -24,6 +24,7 @@ class NewsItem(BaseModel):
     url: str
     source: str
     published_at: str
+    image_url: Optional[str] = None
 
 
 class MarketCreate(BaseModel):
