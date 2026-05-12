@@ -3,20 +3,23 @@ import json
 import os
 from typing import Optional
 
-import anthropic
+import openai
 
 from schemas import GeneratedMarket
 
-_client: Optional[anthropic.Anthropic] = None
+_client: Optional[openai.OpenAI] = None
 
 
-def _get_client() -> anthropic.Anthropic:
+def _get_client() -> openai.OpenAI:
     global _client
     if _client is None:
-        key = os.getenv("ANTHROPIC_API_KEY")
+        key = os.getenv("OPENROUTER_API_KEY")
         if not key:
-            raise RuntimeError("ANTHROPIC_API_KEY is not configured")
-        _client = anthropic.Anthropic(api_key=key)
+            raise RuntimeError("OPENROUTER_API_KEY is not configured")
+        _client = openai.OpenAI(
+            api_key=key,
+            base_url="https://openrouter.ai/api/v1",
+        )
     return _client
 
 
@@ -35,15 +38,27 @@ Return a JSON object with exactly these fields:
 async def generate_market(topic: str) -> GeneratedMarket:
     prompt = _PROMPT.format(topic=topic)
     client = _get_client()
+    model = os.getenv("OPENROUTER_MODEL", "z-ai/glm-4.5-air:free")
 
     def _call() -> GeneratedMarket:
-        message = client.messages.create(
-            model="claude-haiku-4-5",
-            max_tokens=512,
-            system=_SYSTEM,
-            messages=[{"role": "user", "content": prompt}],
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": _SYSTEM},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=1024,
         )
-        raw = message.content[0].text
+        raw = response.choices[0].message.content
+        if not raw:
+            raise ValueError(f"LLM returned no content (finish_reason={response.choices[0].finish_reason!r})")
+        # strip markdown code fences some models add despite instructions
+        raw = raw.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```", 2)[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+            raw = raw.rsplit("```", 1)[0].strip()
         data = json.loads(raw)
         return GeneratedMarket(**data)
 

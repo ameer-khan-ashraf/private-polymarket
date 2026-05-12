@@ -393,6 +393,8 @@ Fetches market metadata via `api.markets.get(id)`. Reads on-chain state via thre
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL connection string (e.g., `postgresql://user:pass@host/db`). The backend normalizes it to `asyncpg` scheme automatically. |
+| `OPENROUTER_API_KEY` | Yes | OpenRouter API key — used by `backend/services/llm.py` to generate market questions. |
+| `OPENROUTER_MODEL` | No | OpenRouter model slug (default: `z-ai/glm-4.5-air:free`). Append `:free` for free-tier models. `response_format` JSON mode is not used — the system prompt enforces JSON output for all models. |
 
 ### Contracts (`contracts/.env`)
 
