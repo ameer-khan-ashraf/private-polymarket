@@ -78,7 +78,7 @@ export function useCreateMarket() {
         abi: PrivateMarketABI,
         functionName: "createMarket",
         args: [BigInt(resolutionTimestamp)],
-        gas: 300_000n,
+        gas: BigInt(300000),
         maxPriorityFeePerGas: parseGwei("30"),
         maxFeePerGas: parseGwei("60"),
         chain: polygonAmoy,

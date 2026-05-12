@@ -1,3 +1,12 @@
+export interface NewsItem {
+  id: string
+  title: string
+  description: string
+  url: string
+  source: string
+  published_at: string
+}
+
 export interface GeneratedMarket {
   question_text: string
   description: string
@@ -51,5 +60,8 @@ export const api = {
         method: "POST",
         ...jsonBody({ topic }),
       }),
+  },
+  news: {
+    list: () => request<NewsItem[]>("/news"),
   },
 }

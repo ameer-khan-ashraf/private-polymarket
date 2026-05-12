@@ -17,6 +17,15 @@ class GeneratedMarket(BaseModel):
     suggested_resolution_days: int
 
 
+class NewsItem(BaseModel):
+    id: str
+    title: str
+    description: str
+    url: str
+    source: str
+    published_at: str
+
+
 class MarketCreate(BaseModel):
     question_text: str
     description: Optional[str] = None

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Wallet, Sparkles, CheckCircle2, Copy, Check, CalendarIcon, HelpCircle, Loader2 } from "lucide-react"
@@ -60,6 +60,25 @@ export default function CreateBetPage() {
     resolverAddress: "",
   })
   const [errors, setErrors] = useState<FormErrors>({})
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem("newsgen_prefill")
+    if (!raw) return
+    sessionStorage.removeItem("newsgen_prefill")
+    try {
+      const prefill = JSON.parse(raw)
+      setFormData((prev) => ({
+        ...prev,
+        question: prefill.question ?? prev.question,
+        description: prefill.description ?? prev.description,
+        sideALabel: prefill.sideALabel ?? prev.sideALabel,
+        sideBLabel: prefill.sideBLabel ?? prev.sideBLabel,
+        deadline: prefill.deadline ? new Date(prefill.deadline) : prev.deadline,
+        deadlineTime: prefill.deadlineTime ?? prev.deadlineTime,
+      }))
+    } catch {}
+  }, [])
+
   const [aiTopic, setAiTopic] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)

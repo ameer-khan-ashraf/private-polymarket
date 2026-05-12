@@ -11,8 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import Base, engine, get_db
 from models import Market
-from schemas import GeneratedMarket, MarketCreate, MarketGenerateRequest, MarketResponse, MarketUpdate
+from schemas import GeneratedMarket, MarketCreate, MarketGenerateRequest, MarketResponse, MarketUpdate, NewsItem
 from services.llm import generate_market
+from services.news import get_news
 
 
 @asynccontextmanager
@@ -98,6 +99,11 @@ async def update_market(
     await db.commit()
     await db.refresh(market)
     return market
+
+
+@app.get("/news", response_model=list[NewsItem])
+async def news_endpoint():
+    return await get_news()
 
 
 @app.post("/generate-market", response_model=GeneratedMarket)

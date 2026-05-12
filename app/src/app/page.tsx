@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Plus, Clock, CheckCircle2, Lock, Trophy, TrendingUp, Wallet, Loader2, Wifi, WifiOff } from "lucide-react"
+import { Plus, Clock, CheckCircle2, Lock, Trophy, TrendingUp, Wallet, Loader2, Wifi, WifiOff, Newspaper } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { BetCard } from "@/components/bet-card"
+import { NewsFeed } from "@/components/NewsFeed"
 import { cn } from "@/lib/utils"
 import { useWallet } from "@/lib/wallet-context"
 import { api } from "@/lib/apiClient"
@@ -13,7 +14,7 @@ import type { Bet, Participant } from "@/lib/mock-data"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { Badge } from "@/components/ui/badge"
 
-type Filter = "all" | "active" | "locked" | "resolved"
+type Filter = "all" | "active" | "locked" | "resolved" | "news"
 
 export default function HomePage() {
   const [filter, setFilter] = useState<Filter>("all")
@@ -107,6 +108,7 @@ export default function HomePage() {
     { value: "active", label: "Open", icon: <Clock className="h-3.5 w-3.5" />, count: bets.filter(b => b.status === "open").length },
     { value: "locked", label: "Locked", icon: <Lock className="h-3.5 w-3.5" />, count: bets.filter(b => b.status === "locked").length },
     { value: "resolved", label: "Settled", icon: <CheckCircle2 className="h-3.5 w-3.5" />, count: bets.filter(b => b.status === "resolved").length },
+    { value: "news", label: "News", icon: <Newspaper className="h-3.5 w-3.5" /> },
   ]
 
   if (!isConnected) {
@@ -212,7 +214,9 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {loading ? (
+        {filter === "news" ? (
+          <NewsFeed />
+        ) : loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="mt-4 text-muted-foreground">Loading bets...</p>
@@ -220,9 +224,9 @@ export default function HomePage() {
         ) : filteredBets.length > 0 ? (
           <div className="space-y-4">
             {filteredBets.map((bet) => (
-              <BetCard 
-                key={bet.id} 
-                bet={bet} 
+              <BetCard
+                key={bet.id}
+                bet={bet}
               />
             ))}
           </div>
@@ -233,8 +237,8 @@ export default function HomePage() {
             </div>
             <h3 className="mb-1 font-semibold">No bets here</h3>
             <p className="mb-5 max-w-xs text-sm text-muted-foreground">
-              {filter === "all" 
-                ? "Create your first bet or join one from a friend." 
+              {filter === "all"
+                ? "Create your first bet or join one from a friend."
                 : `You don't have any ${filter} bets.`}
             </p>
             <div className="flex gap-3">
@@ -253,7 +257,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {!loading && filteredBets.length > 0 && (
+        {!loading && filter !== "news" && filteredBets.length > 0 && (
           <div className="mt-6 flex justify-center">
             <Link href="/join">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
