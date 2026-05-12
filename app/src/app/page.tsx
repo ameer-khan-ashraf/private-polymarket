@@ -14,18 +14,23 @@ import type { Bet, Participant } from "@/lib/mock-data"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { Badge } from "@/components/ui/badge"
 
-type Filter = "all" | "active" | "locked" | "resolved" | "news"
+type Filter = "all" | "active" | "locked" | "resolved"
 
 export default function HomePage() {
   const [filter, setFilter] = useState<Filter>("all")
-  const { isConnected, balance } = useWallet()
+  const { isConnected, address, balance } = useWallet()
   const [bets, setBets] = useState<Bet[]>([])
   const [loading, setLoading] = useState(true)
   const [dbStatus, setDbStatus] = useState<"online" | "offline">("online")
 
   useEffect(() => {
+    if (!isConnected) {
+      setBets([])
+      return
+    }
     async function fetchData() {
       setLoading(true)
+      setBets([])
       try {
         const { data: markets, error: marketsError } = await api.markets.list()
 
@@ -91,7 +96,7 @@ export default function HomePage() {
     }
 
     fetchData()
-  }, [])
+  }, [address, isConnected])
 
   const filteredBets = bets.filter((bet) => {
     if (filter === "all") return true
@@ -108,7 +113,6 @@ export default function HomePage() {
     { value: "active", label: "Open", icon: <Clock className="h-3.5 w-3.5" />, count: bets.filter(b => b.status === "open").length },
     { value: "locked", label: "Locked", icon: <Lock className="h-3.5 w-3.5" />, count: bets.filter(b => b.status === "locked").length },
     { value: "resolved", label: "Settled", icon: <CheckCircle2 className="h-3.5 w-3.5" />, count: bets.filter(b => b.status === "resolved").length },
-    { value: "news", label: "News", icon: <Newspaper className="h-3.5 w-3.5" /> },
   ]
 
   if (!isConnected) {
@@ -132,7 +136,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] px-4 py-6 md:px-6 lg:px-8">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-5xl">
+        <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+          <div>
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="mb-1 text-2xl font-bold tracking-tight">My Bets</h1>
@@ -214,9 +220,7 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {filter === "news" ? (
-          <NewsFeed />
-        ) : loading ? (
+        {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="mt-4 text-muted-foreground">Loading bets...</p>
@@ -257,7 +261,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {!loading && filter !== "news" && filteredBets.length > 0 && (
+        {!loading && filteredBets.length > 0 && (
           <div className="mt-6 flex justify-center">
             <Link href="/join">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
@@ -266,6 +270,20 @@ export default function HomePage() {
             </Link>
           </div>
         )}
+          </div>{/* end main column */}
+
+          <aside className="hidden lg:block">
+            <div className="sticky top-20">
+              <div className="mb-3 flex items-center gap-2">
+                <Newspaper className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-semibold">Latest News</h2>
+              </div>
+              <div className="max-h-[calc(100vh-7rem)] overflow-y-auto pr-1">
+                <NewsFeed compact />
+              </div>
+            </div>
+          </aside>
+        </div>{/* end grid */}
       </div>
     </div>
   )
