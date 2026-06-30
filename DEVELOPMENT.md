@@ -18,8 +18,7 @@
 private-polymarket/
 ├── app/          ← Next.js frontend
 ├── backend/      ← FastAPI REST API
-├── contracts/    ← Hardhat smart contract project
-└── supabase/     ← SQL migration files
+└── contracts/    ← Hardhat smart contract project
 ```
 
 Each subdirectory is an independent project with its own dependencies.
@@ -74,23 +73,11 @@ cp contracts/artifacts/contracts/PrivateMarket.sol/PrivateMarket.json \
 
 The backend needs a PostgreSQL database with the `markets` table.
 
-### Option A — Use Supabase
+### Hosted PostgreSQL
 
-1. Create a project at [supabase.com](https://supabase.com)
-2. Go to SQL Editor → New Query
-3. Paste and run the migration:
+Create a PostgreSQL database with any provider, then set `DATABASE_URL` in the backend environment and start the server. The `lifespan` startup handler in `main.py` runs `Base.metadata.create_all` which creates the full table from the SQLAlchemy model automatically.
 
-```bash
-cat supabase/migrations/001_create_markets_table.sql
-```
-
-> **Note**: The migration SQL is missing several columns added in the backend model (`description`, `side_a_label`, `side_b_label`, `invite_code`, `min_stake`, `max_stake`). You must add them manually or let SQLAlchemy create the table directly (see Option B).
-
-### Option B — Let SQLAlchemy create the schema
-
-Set `DATABASE_URL` in the backend environment and start the server. The `lifespan` startup handler in `main.py` runs `Base.metadata.create_all` which creates the full table from the SQLAlchemy model automatically.
-
-### Option C — Local PostgreSQL
+### Local PostgreSQL
 
 ```bash
 createdb sidebets

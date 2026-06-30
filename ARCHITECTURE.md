@@ -38,7 +38,7 @@ graph TB
 
 ```mermaid
 graph LR
-    subgraph Supabase ["PostgreSQL (FastAPI backend)"]
+    subgraph BackendDB ["PostgreSQL (FastAPI backend)"]
         M["markets\n---\nid (UUID, PK, route key)\nquestion_text\ndescription\nside_a_label\nside_b_label\ninvite_code\ncreator_address\nresolution_time\nresolved (mirror)\noutcome (mirror)\nmin_stake / max_stake\nchain_market_id (FK→chain)\ncreated_at / updated_at"]
     end
 

@@ -51,7 +51,6 @@ private-polymarket/
 │   ├── contracts/PrivateMarket.sol
 │   ├── scripts/deploy.js
 │   └── test/PrivateMarket.js
-└── supabase/migrations/        # Initial schema reference (not actively used)
 ```
 
 ## Getting started
