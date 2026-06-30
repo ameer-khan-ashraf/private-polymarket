@@ -1,6 +1,6 @@
 # Sidebets | Private Prediction Markets
 
-A high-fidelity, decentralized prediction market platform built for private betting with friends. Sidebets combines a professional "Trading Terminal" UI with on-chain transparency and Supabase-powered metadata.
+A high-fidelity, decentralized prediction market platform built for private betting with friends. Sidebets combines a professional "Trading Terminal" UI with on-chain transparency and backend-powered metadata.
 
 ![GitHub License](https://img.shields.io/github/license/ameer-khan-ashraf/private-polymarket)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
@@ -34,7 +34,7 @@ A high-fidelity, decentralized prediction market platform built for private bett
 
 - **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS v4
 - **Web3**: Wagmi v2, Viem v2, RainbowKit
-- **Backend**: Supabase (PostgreSQL)
+- **Backend**: FastAPI + PostgreSQL
 - **Icons**: Lucide React
 - **Components**: Radix UI / Shadcn
 
@@ -42,7 +42,7 @@ A high-fidelity, decentralized prediction market platform built for private bett
 
 ### 1. Prerequisites
 - Node.js 18+
-- A Supabase Project
+- A PostgreSQL database
 - A Polygon Amoy Wallet with some test MATIC
 
 ### 2. Installation
@@ -56,22 +56,12 @@ npm install
 Create a `.env.local` file in the `app` directory:
 ```env
 NEXT_PUBLIC_MARKET_CONTRACT_ADDRESS=0x96f608d53fdfE8D1964C2F2e176dd56B72B87303
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_id
 ```
 
 ### 4. Database Schema
-Ensure your Supabase `markets` table contains the following columns:
-- `id` (uuid)
-- `question_text` (text)
-- `description` (text)
-- `resolution_time` (timestamptz)
-- `creator_address` (text)
-- `chain_market_id` (bigint)
-- `resolved` (boolean)
-- `outcome` (boolean)
-- `invite_code` (text)
+The FastAPI backend creates the `markets` table automatically on startup from `backend/models.py`.
 
 ### 5. Development
 ```bash

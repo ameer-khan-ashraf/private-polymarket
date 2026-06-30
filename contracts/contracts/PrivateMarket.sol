@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 /**
  * @title PrivateMarket
  * @notice Parimutuel betting contract for private prediction markets
- * @dev Markets are identified only by uint256 IDs - question text stored off-chain in Supabase
+ * @dev Markets are identified only by uint256 IDs - question text is stored off-chain by the backend
  */
 contract PrivateMarket {
     // ============ Structs ============

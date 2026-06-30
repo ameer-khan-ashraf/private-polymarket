@@ -124,7 +124,6 @@ Sidebets is a private prediction market app for friend groups. Users connect a W
 - **SQLAlchemy 2.0.36 + asyncpg 0.30** — async PostgreSQL ORM
 - **Pydantic 2.10.3** — request/response validation schemas
 - **PostgreSQL** — hosted database (Railway or Supabase)
-- **Supabase migration SQL** — `supabase/migrations/001_create_markets_table.sql` (initial schema, fewer columns than current model)
 
 ### Dev tooling
 - **Hardhat** + `@nomicfoundation/hardhat-toolbox` — Solidity compilation, testing, deployment
@@ -199,9 +198,6 @@ private-polymarket/
 │   ├── .env.example                   # Template for contract deployment secrets
 │   └── ignition/modules/Counter.ts    # Leftover Hardhat template stub — not used
 │
-└── supabase/
-    └── migrations/
-        └── 001_create_markets_table.sql  # Initial schema (subset of current model columns)
 ```
 
 ---
@@ -212,10 +208,10 @@ private-polymarket/
 
 1. User fills in the 2-step create form (`/create`) and clicks "Create Bet"
 2. `useCreateMarket` hook runs:
-   a. **Step 1 — API first**: `POST /markets` to FastAPI with `question_text`, `resolution_time`, `creator_address`, and a temporary negative `chain_market_id` placeholder. Returns a Supabase-style UUID (`supabaseId`).
+   a. **Step 1 — API first**: `POST /markets` to FastAPI with `question_text`, `resolution_time`, `creator_address`, and a temporary negative `chain_market_id` placeholder. Returns a backend UUID (`supabaseId`, legacy variable name).
    b. **Step 2 — Contract tx**: calls `createMarket(resolutionTimestamp)` on the PrivateMarket contract. User confirms in wallet.
    c. **Step 3 — Link**: parses the `MarketCreated` event from the tx receipt to extract the real `marketId` (uint256). Calls `PATCH /markets/:supabaseId` to update `chain_market_id` with the real on-chain ID.
-3. On success, the invite code and Supabase UUID are shown. Invite link format: `/join?code=XXXXXX`.
+3. On success, the invite code and backend UUID are shown. Invite link format: `/join?code=XXXXXX`.
 
 > **Known gap**: The `api.markets.create` call in `useCreateMarket.ts:47` only sends `question_text`, `resolution_time`, `creator_address`, and `chain_market_id`. The `description`, `sideALabel`, `sideBLabel`, `inviteCode`, `minStake`, `maxStake` fields from the form are **not sent** to the API. They are captured in form state but dropped during creation.
 
@@ -304,7 +300,7 @@ private-polymarket/
 
 `MarketDoesNotExist`, `MarketAlreadyResolved`, `MarketNotResolved`, `BettingClosed`, `InvalidBetAmount`, `NoBetFound`, `AlreadyClaimed`, `NotMarketCreator`, `InvalidResolutionTime`, `LoserCannotClaim`, `CannotSwitchBetSide`
 
-### What the contract handles vs Supabase/backend
+### What the contract handles vs backend
 
 **Contract handles**: Pool accounting, bet placement, resolution enforcement, payout math, MATIC transfers  
 **Backend handles**: Question text, descriptions, side labels, invite codes, stake display hints, creator address display, resolved status mirror (for UI without requiring an RPC read)
@@ -313,7 +309,7 @@ private-polymarket/
 
 ## Database schema
 
-The backend uses SQLAlchemy against PostgreSQL. The actual model (`backend/models.py`) has more columns than the initial Supabase migration (`001_create_markets_table.sql`).
+The backend uses SQLAlchemy against PostgreSQL. The actual model (`backend/models.py`) is the schema source of truth, and startup runs `Base.metadata.create_all`.
 
 ### `markets` table
 
@@ -386,7 +382,7 @@ Fetches market metadata via `api.markets.get(id)`. Reads on-chain state via thre
 | `NEXT_PUBLIC_API_URL` | Yes | FastAPI backend base URL (e.g., `https://your-app.railway.app`) |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Yes | WalletConnect Cloud project ID — get from cloud.walletconnect.com |
 
-> Note: There is **no** `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` used in the current code. The app talks to the FastAPI backend, not Supabase directly. The README is outdated on this point.
+> Note: There is **no** `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` used in the current code. The app talks to the FastAPI backend through `NEXT_PUBLIC_API_URL`, not Supabase directly.
 
 ### Backend (`backend/.env` or Railway environment)
 
@@ -436,22 +432,20 @@ No global state library. Each page manages its own `useState` for UI state. Web3
 
 2. **`contracts/.env` contains real secrets** — The file `contracts/.env` (not `.env.example`) is committed or present locally with a real `PRIVATE_KEY` and `ETHERSCAN_API_KEY`. This file should be in `.gitignore` and never committed.
 
-3. **Supabase migration out of sync with model** — `supabase/migrations/001_create_markets_table.sql` is missing the columns `description`, `side_a_label`, `side_b_label`, `invite_code`, `min_stake`, `max_stake` that exist in `backend/models.py`. Running this migration against a new database will result in a schema mismatch.
+3. **`TugOfWar.tsx` references undefined CSS vars** — Uses `--color-Buy`, `--color-Sell`, `--color-RedGreenBgText` which are not defined in `globals.css`. The component will render with fallback/transparent colors.
 
-4. **`TugOfWar.tsx` references undefined CSS vars** — Uses `--color-Buy`, `--color-Sell`, `--color-RedGreenBgText` which are not defined in `globals.css`. The component will render with fallback/transparent colors.
+4. **`theme-provider.tsx` is unused** — `src/components/theme-provider.tsx` exists but is never imported. The layout uses `className="dark"` directly.
 
-5. **`theme-provider.tsx` is unused** — `src/components/theme-provider.tsx` exists but is never imported. The layout uses `className="dark"` directly.
+5. **Duplicate hook files** — `src/hooks/use-toast.ts` and `src/components/ui/use-toast.ts` appear to be the same file. Same for `src/hooks/use-mobile.ts` and `src/components/ui/use-mobile.tsx`.
 
-6. **Duplicate hook files** — `src/hooks/use-toast.ts` and `src/components/ui/use-toast.ts` appear to be the same file. Same for `src/hooks/use-mobile.ts` and `src/components/ui/use-mobile.tsx`.
+6. **`contracts/ignition/modules/Counter.ts`** — Leftover Hardhat Ignition template stub. Not related to the project.
 
-7. **`contracts/ignition/modules/Counter.ts`** — Leftover Hardhat Ignition template stub. Not related to the project.
+7. **CORS is open** — `backend/main.py:27` has `allow_origins=["*"]`. Should be restricted to the frontend domain in production.
 
-8. **CORS is open** — `backend/main.py:27` has `allow_origins=["*"]`. Should be restricted to the frontend domain in production.
+8. **No backend auth/authorization** — Anyone with the API URL can read/write any market record.
 
-9. **No Supabase RLS** — The README notes Row Level Security is not implemented. Anyone with the API URL can read/write any market record.
+9. **`mockUserBets` is always used for user bets** — Even when the API is online, `setUserBets(mockUserBets)` is called with hardcoded data (`page.tsx:89`). The user's actual bet history is never fetched from the backend.
 
-10. **`mockUserBets` is always used for user bets** — Even when the API is online, `setUserBets(mockUserBets)` is called with hardcoded data (`page.tsx:89`). The user's actual bet history is never fetched from the backend.
+10. **`@vercel/analytics` commented out** — Imported in `package.json` but the `<Analytics />` component is commented out in `layout.tsx`.
 
-11. **`@vercel/analytics` commented out** — Imported in `package.json` but the `<Analytics />` component is commented out in `layout.tsx`.
-
-12. **`invite_code` generated client-side with `Math.random()`** — Not cryptographically secure. Collisions are possible (1 in 36^6 ≈ 2 billion). No server-side uniqueness check before creation.
+11. **`invite_code` generated client-side with `Math.random()`** — Not cryptographically secure. Collisions are possible (1 in 36^6 ≈ 2 billion). No server-side uniqueness check before creation.

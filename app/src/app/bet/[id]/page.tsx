@@ -42,7 +42,7 @@ export default function BetDetailPage() {
   
   const contractAddress = process.env.NEXT_PUBLIC_MARKET_CONTRACT_ADDRESS as `0x${string}`
 
-  // 1. Fetch Metadata from Supabase
+  // 1. Fetch metadata from the backend
   useEffect(() => {
     async function fetchMarket() {
       if (!id) return
