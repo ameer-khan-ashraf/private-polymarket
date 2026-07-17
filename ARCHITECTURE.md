@@ -173,6 +173,35 @@ sequenceDiagram
 
 ---
 
+## Where the LLM sits (and what it's not allowed to do)
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Form as create/page.tsx
+    participant API as FastAPI /markets/parse
+    participant LLM as Gemini (via OpenRouter)
+
+    User->>Form: Type a plain-language bet description
+    Form->>API: POST /markets/parse { text }
+    API->>LLM: structured-output request (json_schema)
+    LLM-->>API: { question, yes_label, no_label, resolution_time, confidence, warnings }
+    Note over API: Deterministic checks only, no DB/chain access:<br/>prompt-injection heuristic, date-plausibility checks
+    API-->>Form: ParsedMarketProposal
+    Form->>Form: setFormData(...) — prefills the SAME manual form
+    Note over User,Form: User reviews/edits every field.<br/>Nothing has been signed, written to the DB, or sent on-chain yet.
+    User->>Form: Continue → existing create flow (unchanged)
+```
+
+The parser sits entirely upstream of, and outside, the existing create flow (`useCreateMarket` → wallet signature → contract write, see "Sequence: Create market" above) — it only ever calls `setFormData(...)` in `create/page.tsx`. It cannot and does not:
+- write to the `markets` table (no `Depends(get_db)` on the route)
+- call the smart contract in any way
+- see or influence wallet signing
+
+Confidence and warnings are surfaced to the user but never gate submission — the existing step-2 validation (deadline must be in the future) remains the only server/client-side gate before a transaction can be signed. See `backend/evals/RESULTS.md` for where the model's own confidence/warnings can and can't be trusted.
+
+---
+
 ## Parimutuel payout formula
 
 ```

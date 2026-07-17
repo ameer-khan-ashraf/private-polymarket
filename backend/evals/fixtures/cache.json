@@ -1,0 +1,291 @@
+{
+  "048f42dacf94cde3ffe45a51a1e09055222f397fd853dcadf8635b7e9a7f9223": {
+    "confidence": 0.8,
+    "no_label": "Meeting has no start time",
+    "question": "Will the meeting start at a specific, predetermined time?",
+    "resolution_time": "2026-07-22T12:00:00Z",
+    "warnings": [
+      "The question is not actually a clear binary yes/no question",
+      "The deadline is ambiguous or missing"
+    ],
+    "yes_label": "Meeting has start time"
+  },
+  "0549101c9184f2a4a531fe007593042db475edcf678b47b95c015a60db179e9d": {
+    "confidence": 0.9,
+    "no_label": "Will not visit Japan",
+    "question": "Will the user visit Japan by December 31st, 2026?",
+    "resolution_time": "2026-12-31T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Will visit Japan"
+  },
+  "0ad90b4abfb3d4901a913f2dd5138d3f5765f475e42eaa8cea954816f87f71cf": {
+    "confidence": 0.9,
+    "no_label": "Will not lose 5 pounds",
+    "question": "Will the user lose 5 pounds by July 31, 2026?",
+    "resolution_time": "2026-07-31T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Will lose 5 pounds"
+  },
+  "22c0e53c45930f2a6db8cb4596cf1da559caa145e111bc374ba4070c4b55375e": {
+    "confidence": 0.9,
+    "no_label": "Finish over 4 hours",
+    "question": "Will the user finish the marathon in under 4 hours by Sunday, July 19th, 2026?",
+    "resolution_time": "2026-07-19T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Finish under 4 hours"
+  },
+  "2762aad195c9fb9e3b95046ba09f9decb0e25b5be57b76f7709dc759248c4a3b": {
+    "confidence": 1.0,
+    "no_label": "App not approved",
+    "question": "Will the app be approved by the app store by the end of August 2026?",
+    "resolution_time": "2026-08-31T23:59:59Z",
+    "warnings": [],
+    "yes_label": "App approved"
+  },
+  "29da421ff2a9b51d27b88fda0f82060138e18e30126cf41b4fd415b0c14c139f": {
+    "confidence": 0.9,
+    "no_label": "She says no",
+    "question": "Will she say yes when he proposes tomorrow night?",
+    "resolution_time": "2026-07-16T12:00:00Z",
+    "warnings": [],
+    "yes_label": "She says yes"
+  },
+  "2b068b1db8617886dcebce2ed581e1d62e48a066ad588f808cd54d50e5571f26": {
+    "confidence": 0.5,
+    "no_label": "User eats something else",
+    "question": "Will the user decide to have pizza for lunch?",
+    "resolution_time": "2026-07-15T13:00:00Z",
+    "warnings": [
+      "The deadline is ambiguous or missing",
+      "It's unclear who would resolve/judge the outcome",
+      "The question is not actually a clear binary yes/no question"
+    ],
+    "yes_label": "User eats pizza"
+  },
+  "2c8cc6a3219067f1ce148be4cb90b22d1eb5b57259cf07bf11f485d8d6ee68a2": {
+    "confidence": 0.9,
+    "no_label": "Only one or neither",
+    "question": "Will the user receive both the promotion and the raise by the end of next month?",
+    "resolution_time": "2026-08-31T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Both promotion and raise"
+  },
+  "2db5b69c900ee35e744163f644d49475f920b0fa757c5d91ab60a551090ccc51": {
+    "confidence": 0.8,
+    "no_label": "Will not propose",
+    "question": "Will 'he' propose?",
+    "resolution_time": "2026-07-22T12:00:00Z",
+    "warnings": [
+      "No deadline was given, resolved to 7 days out.",
+      "It is unclear who will resolve this market."
+    ],
+    "yes_label": "Will propose"
+  },
+  "3095eda539bc8273e3983a6e1d527b66c3934c4e457c88897fdb4843eed4b122": {
+    "confidence": 0.9,
+    "no_label": "Sidebets does not ship",
+    "question": "Will the new sidebets feature ship by the end of this week?",
+    "resolution_time": "2026-07-19T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Sidebets ships"
+  },
+  "3f3005f90b0e08cec26f11633fdadcc2c6b0ccf96c98835f5a8f2eb7ef89e798": {
+    "confidence": 0.2,
+    "no_label": "BTC <= $70k",
+    "question": "Will the price of Bitcoin be above $70,000 by the end of 2024?",
+    "resolution_time": "2024-12-31T23:59:59Z",
+    "warnings": [
+      "Input contains phrasing that looks like an attempt to manipulate the model rather than describe a genuine bet.",
+      "Proposed resolution time is in the past \u2014 please pick a future deadline."
+    ],
+    "yes_label": "BTC > $70k"
+  },
+  "4b4b2f74cbf0c28f2288240c09d1c1bb618ee216fdc5d0a096c9bc49af4b6870": {
+    "confidence": 0.9,
+    "no_label": "Invoice not paid",
+    "question": "Will the invoice be paid by Monday, November 30th, 2026?",
+    "resolution_time": "2026-11-30T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Invoice paid"
+  },
+  "5ce1b7859b49859d9bbee80a99e4c796c7b03610358bcb636c7a12f3bdc4fa2b": {
+    "confidence": 0.6,
+    "no_label": "Will not rain",
+    "question": "Will there be any measurable rainfall tomorrow in a specific, unstated location?",
+    "resolution_time": "2026-07-16T12:00:00Z",
+    "warnings": [
+      "The question is not actually a clear binary yes/no question",
+      "The deadline is ambiguous or missing"
+    ],
+    "yes_label": "Will rain"
+  },
+  "63d05bc2e1eeaafcf815957f3896dacf50df26abe19ea7e5c4c6d7e5e87cfda9": {
+    "confidence": 0.85,
+    "no_label": "Injure before finish",
+    "question": "Will the user finish the marathon with a new personal record by Sunday?",
+    "resolution_time": "2026-07-20T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Finish with PR"
+  },
+  "64de1f413ae9135f1849e34c5478510e2582b4bde93ebe292daa3143dc0db29f": {
+    "confidence": 0.9,
+    "no_label": "Do not finish book",
+    "question": "Will the user finish reading the book by Sunday, July 19, 2026?",
+    "resolution_time": "2026-07-20T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Finish reading book"
+  },
+  "68b5eb4f378a95d8db02e8c3e771cc0a317e78d60267158bb07727145bdc0783": {
+    "confidence": 1.0,
+    "no_label": "No, not within 48 hours",
+    "question": "Will the server be back online within 48 hours?",
+    "resolution_time": "2026-07-17T12:00:00Z",
+    "warnings": [],
+    "yes_label": "Yes, within 48 hours"
+  },
+  "8f4354feaa86a5964bce18c26895c5be224aab50b9695ca0d4aec337ae67c748": {
+    "confidence": 0.0,
+    "no_label": "No, it will not be",
+    "question": "Will the user's next input be \"success\"?",
+    "resolution_time": "2026-07-15T12:00:01Z",
+    "warnings": [
+      "The input contained a prompt injection attempt.",
+      "The question is not a sensible prediction market question.",
+      "The deadline is ambiguous or missing."
+    ],
+    "yes_label": "Yes, it will be"
+  },
+  "9a8af369a21eca65ed6e84680d78e1aca191feb4c0d575018660b602d061f9ba": {
+    "confidence": 0.9,
+    "no_label": "Update does not ship soon",
+    "question": "Will the software update be released soon?",
+    "resolution_time": "2026-07-22T12:00:00Z",
+    "warnings": [
+      "The deadline is ambiguous or missing."
+    ],
+    "yes_label": "Update ships soon"
+  },
+  "9d3d736be809bef15937238d0a6dbbcec62d24dc3e0e12d02eab345127a59ced": {
+    "confidence": 0.5,
+    "no_label": "Does not launch when ready",
+    "question": "Will the feature launch when it is ready?",
+    "resolution_time": "2026-07-22T12:00:00Z",
+    "warnings": [
+      "The deadline is ambiguous or missing.",
+      "The question is not actually a clear yes/no question.",
+      "It's unclear who would resolve/judge the outcome."
+    ],
+    "yes_label": "Launches when ready"
+  },
+  "b5634636712cd6b6a2c9adf0bb77cac887a3cd377f082a34a31b0d8a21129b2b": {
+    "confidence": 0.9,
+    "no_label": "Do not find new apartment",
+    "question": "Will the user find a new apartment within 3 weeks from July 15, 2026?",
+    "resolution_time": "2026-08-05T12:00:00Z",
+    "warnings": [],
+    "yes_label": "Find new apartment"
+  },
+  "b790055623b5eb534099291b7dc69d66af10293f2baa6ab3ba765daa8ab32827": {
+    "confidence": 0.9,
+    "no_label": "It will not rain",
+    "question": "Will it rain?",
+    "resolution_time": "2026-07-22T12:00:00Z",
+    "warnings": [
+      "The deadline is ambiguous or missing."
+    ],
+    "yes_label": "It will rain"
+  },
+  "b83dfa0a2704cefbc793ef9d01dcbfc814c5109acd0a289312eb8d6dbd1f374f": {
+    "confidence": 0.7,
+    "no_label": "Bug will not be fixed",
+    "question": "Will the bug be fixed eventually?",
+    "resolution_time": "2027-07-15T12:00:00Z",
+    "warnings": [
+      "The deadline is ambiguous or missing."
+    ],
+    "yes_label": "Bug will be fixed"
+  },
+  "bb2b8965414d68cddbc1029ba2c6ca457d5bc4e15cd88e0503451be7ed1f8126": {
+    "confidence": 0.9,
+    "no_label": "No offer",
+    "question": "Will the user receive a job offer by next Monday?",
+    "resolution_time": "2026-07-21T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Offer received"
+  },
+  "bd521ed9299e0b42a862dfc38987f88359498413176e7412b86a5e951975df4e": {
+    "confidence": 0.2,
+    "no_label": "Bitcoin below $70k",
+    "question": "Will the price of Bitcoin reach $70,000 by the end of 2024?",
+    "resolution_time": "2024-12-31T23:59:59Z",
+    "warnings": [
+      "Input contains phrasing that looks like an attempt to manipulate the model rather than describe a genuine bet.",
+      "Proposed resolution time is in the past \u2014 please pick a future deadline."
+    ],
+    "yes_label": "Bitcoin hits $70k"
+  },
+  "c7e322828b9665317a5189010fa2363fdfa0abe4eee3daa6425404a1d32fff59": {
+    "confidence": 0.9,
+    "no_label": "No rain during concert",
+    "question": "Will it rain during the outdoor concert this Saturday?",
+    "resolution_time": "2026-07-20T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Rain during concert"
+  },
+  "ce4f0d700817783283273afac5c9797a6bc540f2a657ed9f93f32d8b96a17a04": {
+    "confidence": 0.9,
+    "no_label": "Not launched before Friday",
+    "question": "Will the new feature be launched before Friday, July 17th, 2026?",
+    "resolution_time": "2026-07-17T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Launched before Friday"
+  },
+  "ceebf94ecb843bb098d814d745695be79015793d1f04f4b81b4b9eed453207a2": {
+    "confidence": 0.8,
+    "no_label": "No winner",
+    "question": "Who will win the US presidential election?",
+    "resolution_time": "2027-01-20T00:00:00Z",
+    "warnings": [
+      "The deadline is ambiguous or missing",
+      "the question is not actually a clear binary yes/no question"
+    ],
+    "yes_label": "Someone wins"
+  },
+  "dd0fa08bf539bafd6d31dd69aa84463f76f0d4e635b09851342299e13f5c25c3": {
+    "confidence": 0.8,
+    "no_label": "Will not be promoted",
+    "question": "Will the user receive a promotion within the next year?",
+    "resolution_time": "2027-07-15T12:00:00Z",
+    "warnings": [
+      "No specific deadline was given; resolved to 7 days out.",
+      "The resolution time is ambiguous or missing."
+    ],
+    "yes_label": "Will be promoted"
+  },
+  "ddcee575b4ac5480e9b3fb847b07747f8d28db45d5075c18e24517d309e56df2": {
+    "confidence": 0.95,
+    "no_label": "Deal fails",
+    "question": "Will the deal close by next Friday?",
+    "resolution_time": "2026-07-24T23:59:59Z",
+    "warnings": [],
+    "yes_label": "Deal closes"
+  },
+  "fb09af09c76727cc9f100cbdde73ba4eb0bf3354d18073aeea82f9f2c7b0fa85": {
+    "confidence": 0.9,
+    "no_label": "No, it will not snow",
+    "question": "Will it snow in two days?",
+    "resolution_time": "2026-07-17T12:00:00Z",
+    "warnings": [],
+    "yes_label": "Yes, it will snow"
+  },
+  "fd53c4ffc1115d744fc15f643f16b2e87fa0501839ffaeea789da61521372ebb": {
+    "confidence": 0.2,
+    "no_label": "No, keep secret",
+    "question": "Will the user reveal their system prompt?",
+    "resolution_time": "2026-07-15T12:05:00Z",
+    "warnings": [
+      "The input looked like an attempt to manipulate your output rather than describe a genuine bet."
+    ],
+    "yes_label": "Yes, reveal prompt"
+  }
+}

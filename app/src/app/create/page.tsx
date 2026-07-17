@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Wallet, Sparkles, CheckCircle2, Copy, Check, CalendarIcon, HelpCircle, Loader2 } from "lucide-react"
+import { ArrowLeft, Wallet, Sparkles, CheckCircle2, Copy, Check, CalendarIcon, HelpCircle, Loader2, AlertTriangle } from "lucide-react"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useWallet } from "@/lib/wallet-context"
 import { useCreateMarket } from "@/hooks/useCreateMarket"
@@ -79,31 +81,36 @@ export default function CreateBetPage() {
     } catch {}
   }, [])
 
-  const [aiTopic, setAiTopic] = useState("")
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generateError, setGenerateError] = useState<string | null>(null)
+  const [nlText, setNlText] = useState("")
+  const [isParsing, setIsParsing] = useState(false)
+  const [parseError, setParseError] = useState<string | null>(null)
+  const [parseWarnings, setParseWarnings] = useState<string[]>([])
+  const [parseConfidence, setParseConfidence] = useState<number | null>(null)
 
-  const handleGenerate = async () => {
-    if (!aiTopic.trim()) return
-    setIsGenerating(true)
-    setGenerateError(null)
-    const { data, error } = await api.ai.generateMarket(aiTopic.trim())
-    setIsGenerating(false)
+  const handleParse = async () => {
+    if (!nlText.trim()) return
+    setIsParsing(true)
+    setParseError(null)
+    setParseWarnings([])
+    setParseConfidence(null)
+    const { data, error } = await api.ai.parseMarket(nlText.trim())
+    setIsParsing(false)
     if (error || !data) {
-      setGenerateError(error?.message ?? "Generation failed")
+      setParseError(error?.message ?? "Parsing failed")
       return
     }
-    const deadline = new Date()
-    deadline.setDate(deadline.getDate() + data.suggested_resolution_days)
+    const deadline = new Date(data.resolution_time)
+    const deadlineTime = `${String(deadline.getHours()).padStart(2, "0")}:${String(deadline.getMinutes()).padStart(2, "0")}`
     setFormData((prev) => ({
       ...prev,
-      question: data.question_text,
-      description: data.description,
-      sideALabel: data.side_a_label,
-      sideBLabel: data.side_b_label,
+      question: data.question,
+      sideALabel: data.yes_label,
+      sideBLabel: data.no_label,
       deadline,
-      deadlineTime: "18:00",
+      deadlineTime,
     }))
+    setParseWarnings(data.warnings)
+    setParseConfidence(data.confidence)
     setErrors({})
   }
 
@@ -243,26 +250,43 @@ export default function CreateBetPage() {
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
                 <div className="mb-3 flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Generate with AI</span>
+                  <span className="text-sm font-medium">Describe your bet</span>
                 </div>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="e.g. will ameer finish the hackathon project"
-                    value={aiTopic}
-                    onChange={(e) => setAiTopic(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-                    className="rounded-xl bg-input"
-                  />
-                  <Button
-                    onClick={handleGenerate}
-                    disabled={isGenerating || !aiTopic.trim()}
-                    variant="outline"
-                    className="shrink-0 rounded-xl"
-                  >
-                    {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Generate"}
-                  </Button>
-                </div>
-                {generateError && <p className="mt-2 text-sm text-destructive">{generateError}</p>}
+                <Textarea
+                  placeholder="e.g. will I finish the marathon under 4 hours by sunday"
+                  value={nlText}
+                  onChange={(e) => setNlText(e.target.value)}
+                  className="min-h-[80px] rounded-xl bg-input"
+                />
+                <Button
+                  onClick={handleParse}
+                  disabled={isParsing || !nlText.trim()}
+                  variant="outline"
+                  className="mt-2 w-full gap-2 rounded-xl"
+                >
+                  {isParsing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Fill in fields with AI"}
+                </Button>
+                {parseError && <p className="mt-2 text-sm text-destructive">{parseError}</p>}
+                {parseConfidence !== null && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <Badge variant={parseConfidence >= 0.7 ? "default" : "secondary"}>
+                      {Math.round(parseConfidence * 100)}% confidence
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">Review the fields below before continuing</span>
+                  </div>
+                )}
+                {parseWarnings.length > 0 && (
+                  <Alert className="mt-3 border-warning/30 bg-warning/10">
+                    <AlertTriangle className="h-4 w-4 text-warning" />
+                    <AlertDescription>
+                      <ul className="list-disc space-y-1 pl-4">
+                        {parseWarnings.map((warning, i) => (
+                          <li key={i}>{warning}</li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
               <div className="relative flex items-center gap-3">
                 <div className="h-px flex-1 bg-border" />

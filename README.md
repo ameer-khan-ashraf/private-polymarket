@@ -159,6 +159,29 @@ Else:
 | GET | `/markets/by-invite/{code}` | Look up market by invite code |
 | PATCH | `/markets/{id}` | Update market fields |
 | DELETE | `/markets/{id}` | Delete market (cleanup on failed tx) |
+| POST | `/markets/parse` | NL → structured market proposal (LLM, no DB write — see below) |
+| POST | `/generate-market` | Topic → suggested market fields (LLM, used by the news-feed "turn into a bet" flow) |
+| GET | `/news` | Cached news feed used as market-creation inspiration |
+
+## AI-assisted market creation
+
+`POST /markets/parse` lets a user type a plain-language bet ("will I finish the marathon under 4 hours by sunday") and get back a structured proposal — `question`, `yes_label`, `no_label`, an absolute `resolution_time`, a `confidence` score, and a `warnings` list — that prefills the `/create` form for the user to review and edit.
+
+**Hard rule: the model never triggers a transaction.** It only ever returns a proposal; the existing manual create flow (form validation → `useCreateMarket` → wallet signature → on-chain write) is completely unchanged and is the only path that touches the contract. Low confidence or warnings nudge the user to review more carefully but never block submission — the human is always the one who signs.
+
+The provider is a Gemini model (`google/gemini-2.5-flash-lite`) called through the existing OpenRouter client, not a direct Gemini SDK — a direct integration was tried previously and dropped (see `services/llm.py` history) because it geo-blocked users in unsupported regions. Model choice is overridable via `OPENROUTER_MODEL_PARSE`.
+
+**Current eval pass rate** (30 hand-written cases across happy-path, relative-date, ambiguous-deadline, non-binary, adversarial, multi-clause, and no-deadline categories — see `backend/evals/`):
+
+| Field | Pass rate |
+|---|---|
+| yes_no_labels | 100% |
+| question | 95% |
+| warnings | 93% |
+| resolution_time | 73% |
+| confidence | 75% |
+
+Run it yourself from `backend/`: `python -m evals.run` (uses a committed response cache, no API key needed) or `python -m evals.run --refresh` (re-calls the real provider). Full breakdown, including a real systematic bug found in named-weekday date resolution and a case where the model's `confidence` score doesn't discount for its own stated warnings, is in `backend/evals/RESULTS.md` — nothing there was prompt-tuned away; failures that reveal real limits are left in and documented.
 
 ## Testing contracts
 

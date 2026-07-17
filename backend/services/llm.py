@@ -1,27 +1,9 @@
 import asyncio
 import json
 import os
-from typing import Optional
-
-import openai
 
 from schemas import GeneratedMarket
-
-_client: Optional[openai.OpenAI] = None
-
-
-def _get_client() -> openai.OpenAI:
-    global _client
-    if _client is None:
-        key = os.getenv("OPENROUTER_API_KEY")
-        if not key:
-            raise RuntimeError("OPENROUTER_API_KEY is not configured")
-        _client = openai.OpenAI(
-            api_key=key,
-            base_url="https://openrouter.ai/api/v1",
-        )
-    return _client
-
+from services.openrouter_client import get_client
 
 _SYSTEM = "You are helping create prediction markets for a friend group betting app. Always respond with valid JSON only — no markdown, no explanation."
 
@@ -37,8 +19,8 @@ Return a JSON object with exactly these fields:
 
 async def generate_market(topic: str) -> GeneratedMarket:
     prompt = _PROMPT.format(topic=topic)
-    client = _get_client()
-    model = os.getenv("OPENROUTER_MODEL", "z-ai/glm-4.5-air:free")
+    client = get_client()
+    model = os.getenv("OPENROUTER_MODEL", "google/gemma-4-26b-a4b-it:free")
 
     def _call() -> GeneratedMarket:
         response = client.chat.completions.create(

@@ -128,6 +128,7 @@ Sidebets is a private prediction market app for friend groups. Users connect a W
 ### Dev tooling
 - **Hardhat** + `@nomicfoundation/hardhat-toolbox` — Solidity compilation, testing, deployment
 - **ESLint 9** + `eslint-config-next` — linting
+- **pytest + pytest-asyncio** — backend unit tests (`backend/tests/`), provider mocked, no API key needed
 - **Railway** — backend deployment (`backend/railway.toml`, `Procfile`)
 - **Vercel** — frontend deployment (implied; `@vercel/analytics` in deps, commented out)
 
@@ -177,11 +178,24 @@ private-polymarket/
 │               └── PrivateMarket.json # Contract ABI (copied from contracts/artifacts)
 │
 ├── backend/                           # FastAPI Python REST API
-│   ├── main.py                        # FastAPI app: CRUD routes for markets
+│   ├── main.py                        # FastAPI app: CRUD routes + /generate-market, /news, /markets/parse
 │   ├── models.py                      # SQLAlchemy ORM model for the markets table
 │   ├── schemas.py                     # Pydantic request/response schemas
 │   ├── database.py                    # Async SQLAlchemy engine + session factory
-│   ├── requirements.txt               # Python deps: fastapi, sqlalchemy, asyncpg, pydantic
+│   ├── services/
+│   │   ├── openrouter_client.py       # Shared lazy OpenRouter client singleton (get_client())
+│   │   ├── llm.py                     # Topic → GeneratedMarket (used by /generate-market)
+│   │   ├── nl_parse.py                # NL text → ParsedMarketProposal (used by /markets/parse)
+│   │   └── news.py                    # Cached news feed fetcher (used by /news)
+│   ├── tests/
+│   │   └── test_parse.py              # pytest for /markets/parse — provider fully mocked
+│   ├── evals/                         # Eval harness for /markets/parse (real provider, cached)
+│   │   ├── cases.json                 # 30 hand-written cases across 7 categories
+│   │   ├── run.py                     # python -m evals.run — per-field scoring + pass rates
+│   │   ├── fixtures/cache.json        # Committed response cache — CI needs no API key
+│   │   └── RESULTS.md                 # Current pass rate + documented failures, not prompt-tuned away
+│   ├── pytest.ini                     # pythonpath=. so `pytest`/`python -m evals.run` resolve backend modules
+│   ├── requirements.txt               # Python deps: fastapi, sqlalchemy, asyncpg, pydantic, pytest
 │   ├── Procfile                       # Railway/Heroku start command
 │   └── railway.toml                   # Railway deployment config with health check
 │
@@ -206,6 +220,7 @@ private-polymarket/
 
 ### How a market gets created
 
+0. **Optional — NL-assisted prefill**: user types a plain-language bet description into the "Describe your bet" box at the top of step 1, which calls `POST /markets/parse` (`services/nl_parse.py`) and prefills `question`/`sideALabel`/`sideBLabel`/`deadline`/`deadlineTime` from the response. Confidence and warnings are shown but never block continuing — this step only calls `setFormData(...)`, it does not touch the API/contract flow below. See `ARCHITECTURE.md` → "Where the LLM sits" for the full boundary.
 1. User fills in the 2-step create form (`/create`) and clicks "Create Bet"
 2. `useCreateMarket` hook runs:
    a. **Step 1 — API first**: `POST /markets` to FastAPI with `question_text`, `resolution_time`, `creator_address`, and a temporary negative `chain_market_id` placeholder. Returns a backend UUID (`supabaseId`, legacy variable name).
@@ -366,7 +381,7 @@ Fetches market metadata via `api.markets.get(id)`. Reads on-chain state via thre
 | Route | Page | What the user can do |
 |-------|------|----------------------|
 | `/` | `app/page.tsx` | View all markets fetched from API; filter by All/Open/Locked/Settled; see personal stats (active count, staked, won, claimable); navigate to create or join |
-| `/create` | `app/create/page.tsx` | 2-step form: Step 1 (question, description, side labels); Step 2 (deadline, stake range); Step 3 (success — copy invite link) |
+| `/create` | `app/create/page.tsx` | Optional NL "Describe your bet" box (calls `/markets/parse`, prefills the fields below) → Step 1 (question, description, side labels); Step 2 (deadline, stake range); Step 3 (success — copy invite link) |
 | `/join` | `app/join/page.tsx` | Enter a 6-char invite code (or auto-read from `?code=` query param); redirects to `/bet/:uuid` on match |
 | `/bet/[id]` | `app/bet/[id]/page.tsx` | View question, pool state, countdown; select side + stake + place bet; see joined status; claim winnings; resolve market (creator only after deadline) |
 
@@ -389,8 +404,9 @@ Fetches market metadata via `api.markets.get(id)`. Reads on-chain state via thre
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL connection string (e.g., `postgresql://user:pass@host/db`). The backend normalizes it to `asyncpg` scheme automatically. |
-| `OPENROUTER_API_KEY` | Yes | OpenRouter API key — used by `backend/services/llm.py` to generate market questions. |
-| `OPENROUTER_MODEL` | No | OpenRouter model slug (default: `z-ai/glm-4.5-air:free`). Append `:free` for free-tier models. `response_format` JSON mode is not used — the system prompt enforces JSON output for all models. |
+| `OPENROUTER_API_KEY` | Yes | OpenRouter API key — used by `backend/services/llm.py` (topic → market) and `backend/services/nl_parse.py` (NL text → market proposal), via the shared client in `services/openrouter_client.py`. |
+| `OPENROUTER_MODEL` | No | Model slug for `/generate-market` (default: `google/gemma-4-26b-a4b-it:free`). Append `:free` for free-tier models. `:free` slugs get deprecated (e.g. `z-ai/glm-4.5-air:free` was pulled — 404) or intermittently rate/spend-limited by their upstream provider (many route through a provider called "Venice", which has been unreliable — 429/402). If generation errors out, check `GET https://openrouter.ai/api/v1/models` for current `:free` slugs and prefer ones routed through a different provider. `response_format` JSON mode is not used for this route — the system prompt enforces JSON output. |
+| `OPENROUTER_MODEL_PARSE` | No | Model slug for `/markets/parse` (default: `google/gemini-2.5-flash-lite`). This route uses strict `json_schema` structured output (unlike `/generate-market`), so pick a model whose OpenRouter listing shows `structured_outputs` under `supported_parameters`. Chosen deliberately over a direct Gemini SDK integration — see `services/llm.py` git history for why direct Gemini was dropped (geo-blocking). |
 
 ### Contracts (`contracts/.env`)
 
@@ -405,7 +421,7 @@ Fetches market metadata via `api.markets.get(id)`. Reads on-chain state via thre
 ## Common patterns
 
 ### API calls (`src/lib/apiClient.ts`)
-All requests go through the `request<T>()` function which wraps `fetch` and always returns `{ data: T | null, error: { message: string } | null }`. Never throws — callers check `error` field. The `api` object provides namespaced methods: `api.markets.list()`, `api.markets.get(id)`, `api.markets.getByInviteCode(code)`, `api.markets.create(body)`, `api.markets.update(id, body)`, `api.markets.delete(id)`.
+All requests go through the `request<T>()` function which wraps `fetch` and always returns `{ data: T | null, error: { message: string } | null }`. Never throws — callers check `error` field. The `api` object provides namespaced methods: `api.markets.list()`, `api.markets.get(id)`, `api.markets.getByInviteCode(code)`, `api.markets.create(body)`, `api.markets.update(id, body)`, `api.markets.delete(id)`; `api.ai.generateMarket(topic)`, `api.ai.parseMarket(text)`; `api.news.list()`.
 
 ### Web3 interactions
 - **Reads**: `useReadContract` from wagmi with `query: { enabled: ... }` guard to prevent calls before `chainMarketId` is available.

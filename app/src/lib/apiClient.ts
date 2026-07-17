@@ -16,6 +16,15 @@ export interface GeneratedMarket {
   suggested_resolution_days: number
 }
 
+export interface ParsedMarketProposal {
+  question: string
+  yes_label: string
+  no_label: string
+  resolution_time: string
+  confidence: number
+  warnings: string[]
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 async function request<T>(
@@ -60,6 +69,11 @@ export const api = {
       request<GeneratedMarket>("/generate-market", {
         method: "POST",
         ...jsonBody({ topic }),
+      }),
+    parseMarket: (text: string) =>
+      request<ParsedMarketProposal>("/markets/parse", {
+        method: "POST",
+        ...jsonBody({ text }),
       }),
   },
   news: {

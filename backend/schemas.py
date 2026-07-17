@@ -17,6 +17,19 @@ class GeneratedMarket(BaseModel):
     suggested_resolution_days: int
 
 
+class MarketParseRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=2000)
+
+
+class ParsedMarketProposal(BaseModel):
+    question: str
+    yes_label: str
+    no_label: str
+    resolution_time: datetime
+    confidence: float = Field(ge=0.0, le=1.0)
+    warnings: list[str] = []
+
+
 class NewsItem(BaseModel):
     id: str
     title: str

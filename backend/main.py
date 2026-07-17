@@ -11,9 +11,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import Base, engine, get_db
 from models import Market
-from schemas import GeneratedMarket, MarketCreate, MarketGenerateRequest, MarketResponse, MarketUpdate, NewsItem
+from schemas import (
+    GeneratedMarket,
+    MarketCreate,
+    MarketGenerateRequest,
+    MarketParseRequest,
+    MarketResponse,
+    MarketUpdate,
+    NewsItem,
+    ParsedMarketProposal,
+)
 from services.llm import generate_market
 from services.news import get_news
+from services.nl_parse import ProviderError, parse_market_text
 
 
 @asynccontextmanager
@@ -111,6 +121,14 @@ async def generate_market_endpoint(data: MarketGenerateRequest):
     try:
         return await generate_market(data.topic)
     except Exception as e:
+        raise HTTPException(status_code=502, detail=f"LLM error: {str(e)}")
+
+
+@app.post("/markets/parse", response_model=ParsedMarketProposal)
+async def parse_market_endpoint(data: MarketParseRequest):
+    try:
+        return await parse_market_text(data.text)
+    except ProviderError as e:
         raise HTTPException(status_code=502, detail=f"LLM error: {str(e)}")
 
 
