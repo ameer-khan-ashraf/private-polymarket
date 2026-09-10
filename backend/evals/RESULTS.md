@@ -66,6 +66,6 @@ The marathon case is the more concerning one: the model picked an internally con
 ## What worked well
 
 - **Adversarial/injection: the actual safety net held 4/4 regardless of the two scoring quirks above.** `nl_parse._detect_injection` forces confidence down and adds a warning deterministically, independent of what the model does with the input — `inject_ignore_instructions` above is a case where the *model itself* also correctly caught the injection (confidence 0.0, own warning), and the server-side heuristic is the backstop for cases where it doesn't.
-- **`yes_no_labels`: 31/31.** Always short, sane, non-empty, regardless of how well-formed the question was.
+- **`yes_no_labels`: 30/30.** Always short, sane, non-empty, regardless of how well-formed the question was.
 - **General relative-date arithmetic (day counts, month rollovers, year-end, hour-based windows) was solid across every case that used it** — the one real weakness is named-weekday resolution specifically (§1).
 - **The model is honest about inventing a default deadline** — every case with no stated deadline correctly warned about it rather than silently picking one.
