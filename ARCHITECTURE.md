@@ -12,7 +12,7 @@ graph TB
         RK["RainbowKit\nWallet Modal"]
     end
 
-    subgraph Backend ["FastAPI Backend (Railway)"]
+    subgraph Backend ["FastAPI Backend (Render)"]
         API["FastAPI\nmain.py"]
         ORM["SQLAlchemy\nmodels.py"]
         DB[("PostgreSQL\nmarkets table")]
