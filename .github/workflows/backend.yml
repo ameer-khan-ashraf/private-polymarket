@@ -25,9 +25,9 @@ jobs:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       OPENROUTER_API_KEY: ci-placeholder
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version-file: backend/.python-version
           cache: pip
