@@ -8,7 +8,7 @@
 - **MetaMask** or any injected EVM wallet
 - **Polygon Amoy testnet MATIC** — get from the [Polygon Faucet](https://faucet.polygon.technology/)
 - A **WalletConnect Cloud project ID** — free at [cloud.walletconnect.com](https://cloud.walletconnect.com)
-- A **PostgreSQL database** — local, Railway, Supabase, or any provider
+- A **PostgreSQL database** — local, Render, Supabase, or any provider
 
 ---
 
@@ -181,18 +181,22 @@ Alternative faucet: [faucet.quicknode.com/polygon/amoy](https://faucet.quicknode
 
 ## Deploying
 
-### Backend — Railway
+### Backend — Render
 
-1. Push `backend/` to a GitHub repo (or the whole monorepo)
-2. Create a Railway project, connect the repo, set root directory to `backend/`
-3. Add `DATABASE_URL` environment variable in Railway dashboard
-4. Railway auto-detects the `railway.toml` / `Procfile` and deploys
-
-The `railway.toml` configures:
-- Builder: nixpacks
+The service is defined in `backend/render.yaml` (`private-polymarket-api`, Python, free plan, Oregon):
+- Build: `pip install -r requirements.txt`
 - Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-- Health check: `GET /health` (30s timeout)
-- Restart policy: on failure
+- Health check: `GET /health`
+
+1. In Render, create a web service from the GitHub repo with root directory `backend/` (or point a Blueprint at `backend/render.yaml`)
+2. Set `DATABASE_URL` and `OPENROUTER_API_KEY` in the Render dashboard (plus `OPENROUTER_MODEL` / `OPENROUTER_MODEL_PARSE` only if overriding the code defaults)
+3. Under **Settings → Build & Deploy**, set branch to `main` and **Auto-Deploy** to **After CI Checks Pass**
+
+**CI/CD flow**: pushes and PRs touching `backend/` run `.github/workflows/backend.yml` (`pytest` on the Python version in `backend/.python-version`). On `main`, Render waits for that check and deploys only if it passes. Commits that don't touch `backend/` skip both CI and the Render deploy. The workflow sets placeholder `DATABASE_URL` / `OPENROUTER_API_KEY` values because `database.py` reads the URL at import time. Tests stay offline and need no secrets.
+
+> Gotcha: `autoDeployTrigger: checksPass` in `render.yaml` only takes effect if the service is managed as a Blueprint synced from that file. For a service created in the dashboard, the dashboard setting in step 3 is what counts.
+
+> Gotcha: a stale `OPENROUTER_MODEL` value in the Render dashboard overrides the default in `services/llm.py`, even after a redeploy.
 
 ### Frontend — Vercel
 

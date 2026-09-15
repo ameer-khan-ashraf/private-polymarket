@@ -123,13 +123,14 @@ Sidebets is a private prediction market app for friend groups. Users connect a W
 - **FastAPI 0.115.6** (Python) — REST API server (`backend/`)
 - **SQLAlchemy 2.0.36 + asyncpg 0.30** — async PostgreSQL ORM
 - **Pydantic 2.10.3** — request/response validation schemas
-- **PostgreSQL** — hosted database (Railway or Supabase)
+- **PostgreSQL** — hosted database
 
 ### Dev tooling
 - **Hardhat** + `@nomicfoundation/hardhat-toolbox` — Solidity compilation, testing, deployment
 - **ESLint 9** + `eslint-config-next` — linting
 - **pytest + pytest-asyncio** — backend unit tests (`backend/tests/`), provider mocked, no API key needed
-- **Railway** — backend deployment (`backend/railway.toml`, `Procfile`)
+- **GitHub Actions** — backend CI (`.github/workflows/backend.yml`: `pytest` on pushes/PRs touching `backend/`)
+- **Render** — backend deployment (`backend/render.yaml`), auto-deploys `main` after CI checks pass
 - **Vercel** — frontend deployment (implied; `@vercel/analytics` in deps, commented out)
 
 ---
@@ -142,6 +143,7 @@ private-polymarket/
 ├── CLAUDE.md                          # This file
 ├── ARCHITECTURE.md                    # Mermaid diagrams and data model
 ├── DEVELOPMENT.md                     # Setup and deployment guide
+├── .github/workflows/backend.yml      # Backend CI: pytest gate that Render waits on before deploying
 │
 ├── app/                               # Next.js 16 frontend
 │   ├── next.config.ts                 # Allows remote images from any host
@@ -196,8 +198,9 @@ private-polymarket/
 │   │   └── RESULTS.md                 # Current pass rate + documented failures, not prompt-tuned away
 │   ├── pytest.ini                     # pythonpath=. so `pytest`/`python -m evals.run` resolve backend modules
 │   ├── requirements.txt               # Python deps: fastapi, sqlalchemy, asyncpg, pydantic, pytest
-│   ├── Procfile                       # Railway/Heroku start command
-│   └── railway.toml                   # Railway deployment config with health check
+│   ├── Procfile                       # Heroku-style start command (not used by Render)
+│   ├── .python-version                # Python 3.11.9 — used by Render and CI
+│   └── render.yaml                    # Render service definition: build/start, /health check, deploy after CI passes
 │
 ├── contracts/                         # Hardhat project
 │   ├── contracts/
@@ -394,12 +397,12 @@ Fetches market metadata via `api.markets.get(id)`. Reads on-chain state via thre
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `NEXT_PUBLIC_MARKET_CONTRACT_ADDRESS` | Yes | Deployed PrivateMarket contract address on Polygon Amoy |
-| `NEXT_PUBLIC_API_URL` | Yes | FastAPI backend base URL (e.g., `https://your-app.railway.app`) |
+| `NEXT_PUBLIC_API_URL` | Yes | FastAPI backend base URL (e.g., `https://your-app.onrender.com`) |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Yes | WalletConnect Cloud project ID — get from cloud.walletconnect.com |
 
 > Note: There is **no** `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` used in the current code. The app talks to the FastAPI backend through `NEXT_PUBLIC_API_URL`, not Supabase directly.
 
-### Backend (`backend/.env` or Railway environment)
+### Backend (`backend/.env` or Render environment)
 
 | Variable | Required | Description |
 |----------|----------|-------------|

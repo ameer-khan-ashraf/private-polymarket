@@ -1,0 +1,38 @@
+name: Backend CI
+
+# Render's auto-deploy is set to "After CI Checks Pass", so a push to main only
+# ships the backend once this workflow succeeds.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # Placeholders: database.py reads DATABASE_URL at import time and the OpenRouter
+      # client needs a key to construct. Tests never open a DB connection or call the provider.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      OPENROUTER_API_KEY: ci-placeholder
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version-file: backend/.python-version
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - run: pip install -r requirements.txt
+
+      - run: pytest -q
